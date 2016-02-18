@@ -9,7 +9,7 @@ struct Variable {
 enum SolutionType { naive };
 
 // prototypes
-void readSSFile(std::vector<Variable>*, std::vector<std::vector<int>>);
+void readSSFile(std::string fileName, std::vector<Variable>*, std::vector<std::vector<int>>);
 void solve(SolutionType, std::vector<Variable>*, std::vector<std::vector<int>>*, std::vector<bool>*, double*);
 
 int main(int argc, char* argv[]) {
@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	std::string fileName = argv[2];
-	
+
 	// data structures
 	std::vector<Variable> variables;
 	std::vector<bool> assignments;
@@ -47,12 +47,15 @@ int main(int argc, char* argv[]) {
 
 
 
+
+
 	// report results	
 
 	return 0;
 }
 
-void readSSFile(std::vector<Variable>* variables, 
+void readSSFile(std::string fileName,
+				std::vector<Variable>* variables, 
 				std::vector<std::vector<int>>* clauses)
 {
 	// read in the file

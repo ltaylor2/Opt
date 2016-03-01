@@ -5,12 +5,12 @@
 #include <algorithm>
 #include <chrono>
 
-enum SolutionType { naive, unit };
+enum SolutionType { naive, unit, pure };
 
 // prototypes
 int readSSATFile(std::string fileName, std::vector<double>*, std::vector<std::vector<int>>*, std::vector<std::vector<int>>*);
 double solve(SolutionType, std::vector<double>*, std::vector<std::vector<int>>*, std::vector<int>*, std::vector<int>, std::vector<std::vector<int>>*);
-void satisfyClauses(int, std::vector<std::vector<int>>*, std::vector<int>*, std::vector<int>*);
+void satisfyClauses(int, std::vector<std::vector<int>>*, std::vector<int>*, std::vector<int>*, std::vector<std::vector<int>>*);
 
 int main(int argc, char* argv[])
 {
@@ -25,6 +25,8 @@ int main(int argc, char* argv[])
 		directions = SolutionType::naive;
 	else if (std::string(argv[1]).compare("u") == 0)
 		directions = SolutionType::unit;
+	else if (std::string(argv[1]).compare("p") == 0)
+		directions = SolutionType::pure;
 	else {
 		std::cout << "---" << argv[1] << "---" << std::endl;
 		std::cout << "Incorrect solving directions. Exiting." << std::endl;
@@ -142,6 +144,7 @@ double solve(SolutionType directions,
 	if (directions == SolutionType::unit) {
 		std::vector<std::vector<int>> unitCopy(*clauses);
 		std::vector<int> unitSats(*clauseSats);
+		std::vector<std::vector<int>> unitVBC(*varsByClause);
 
 		int unitVar	= 0;
 		for (unsigned int c = 0; c < unitCopy.size(); c++) {
@@ -153,8 +156,8 @@ double solve(SolutionType directions,
 		// if you've found a unit clause, proceed
 		if (unitVar != 0) {
 			assignments[abs(unitVar)-1] = unitVar / abs(unitVar);
-			satisfyClauses(abs(unitVar)-1, &unitCopy, &unitSats, &assignments);
-			double probSatUnit = solve(directions, variables, &unitCopy, &unitSats, assignments, varsByClause);
+			satisfyClauses(abs(unitVar)-1, &unitCopy, &unitSats, &assignments, &unitVBC);
+			double probSatUnit = solve(directions, variables, &unitCopy, &unitSats, assignments, &unitVBC);
 			if (variables->at(abs(unitVar)-1) == -1)
 				return probSatUnit;
 			else {
@@ -166,23 +169,72 @@ double solve(SolutionType directions,
 		}
 	}
 
+	// find pure choice variables
+	if (directions == SolutionType::pure) {
+		std::vector<std::vector<int>> pureCopy(*clauses);
+		std::vector<int> pureSats(*clauseSats);
+		std::vector<std::vector<int>> pureVBC(*varsByClause);
+
+		int pureVar = -1;
+		for (int l = 0; l < (signed int)pureVBC.size(); l++) {
+			std::cout << "here" << std::endl;
+			if (variables->at(l) != -1 || assignments[l] == 0)	// only looking at unassigned choice variables
+				continue;
+			std::cout << "2" << std::endl;
+			for (unsigned int c = 1; c < varsByClause->at(l).size(); c++) {
+				pureVar = l;
+				if (!((pureVBC[l][c-1] < 0 && pureVBC[l][c] < 0) || (pureVBC[l][c-1] > 0 && pureVBC[l][c] > 0)) || pureVBC[l].size() <= 1) {
+					pureVar = -1;	// know it's not pure
+					std::cout << "breakage" << std::endl;
+					break;		// so move on to the next variable
+				}
+			}
+						std::cout << "3" << std::endl;
+
+
+			if (pureVar == l)	// found one
+				break;			// use it as the pure
+		}
+			std::cout << "4     " << pureVar << std::endl;
+			std::cout << std::endl;
+
+		if (pureVar != -1) {	// now assign pure var correctly, check for satisfaction, etc.
+			for (unsigned int t = 0; t < pureVBC[pureVar].size(); t++) {
+				std::cout << pureVBC[pureVar][t] << " ";
+			} std::cout << std::endl;
+
+			std::cout << "assigning " << pureVar << "  along " << pureVBC[pureVar].size() << std::endl;
+			assignments[pureVar] = pureVBC[pureVar][0] / abs(pureVBC[pureVar][0]);
+
+			std::cout << "satisfying" << std::endl;
+			satisfyClauses(pureVar, &pureCopy, &pureSats, &assignments, &pureVBC);
+
+			std::cout << "solving" << std::endl;
+			return solve(directions, variables, &pureCopy, &pureSats, assignments, &pureVBC);
+		}
+	}
+
 	// there is guaranteed to be a 0 in assignments, because if there was not we would have retunred from allSat == TRUE
 	int nextVarIndex = std::distance(assignments.begin(), std::find(assignments.begin(), assignments.end(), 0));
 	// trying false
 	assignments[nextVarIndex] = -1;
 	std::vector<std::vector<int>> falseCopy(*clauses);	// a copy so we don't have to revert changes
 	std::vector<int> falseSats(*clauseSats);
+	std::vector<std::vector<int>> falseVBC(*varsByClause);	// a copy so we don't have to revert changes
+
 	// satisfy clauses
-	satisfyClauses(nextVarIndex, &falseCopy, &falseSats, &assignments);
-	double probSatFalse = solve(directions, variables, &falseCopy, &falseSats, assignments, varsByClause);
+	satisfyClauses(nextVarIndex, &falseCopy, &falseSats, &assignments, &falseVBC);
+	double probSatFalse = solve(directions, variables, &falseCopy, &falseSats, assignments, &falseVBC);
 
 	// trying true
 	assignments[nextVarIndex] = 1;
 	std::vector<std::vector<int>> trueCopy(*clauses);	// a copy so we don't have to revert changes
 	std::vector<int> trueSats(*clauseSats);
+	std::vector<std::vector<int>> trueVBC(*varsByClause);	// a copy so we don't have to revert changes
+
 	// satisfy clauses
-	satisfyClauses(nextVarIndex, &trueCopy, &trueSats, &assignments);
-	double probSatTrue = solve(directions, variables, &trueCopy, &trueSats, assignments, varsByClause);
+	satisfyClauses(nextVarIndex, &trueCopy, &trueSats, &assignments, &trueVBC);
+	double probSatTrue = solve(directions, variables, &trueCopy, &trueSats, assignments, &trueVBC);
 
 	if (variables->at(nextVarIndex) == -1) { 	// v is a choice variable
 		return std::max(probSatFalse, probSatTrue);
@@ -191,23 +243,37 @@ double solve(SolutionType directions,
 	return probSatTrue * variables->at(nextVarIndex) + probSatFalse * (1 - variables->at(nextVarIndex));
 }
 
-void satisfyClauses(int varIndex, std::vector<std::vector<int>>* clauses, std::vector<int>* sats, std::vector<int>* assignments)
+void satisfyClauses(int varIndex, std::vector<std::vector<int>>* clauses, std::vector<int>* sats, std::vector<int>* assignments, std::vector<std::vector<int>>* varsByClause)
 {
-	for (unsigned int c = 0; c < clauses->size(); c++) {
+	for (int c = 0; c < (signed int)clauses->size(); c++) {
 		if (sats->at(c) == 1)
 			continue;
 		for (unsigned int l = 0; l < clauses->at(c).size(); l++) {
-			if (clauses->at(c).at(l) == (varIndex + 1) * assignments->at(varIndex))
+			if (clauses->at(c).at(l) == (varIndex + 1) * assignments->at(varIndex)) {
 				sats->at(c) = 1;
+
+				// now that a clause is satisfied, erase that clause from all the variable's list of active clauses
+				for (unsigned int v = 0; v < varsByClause->size(); v++) {
+					std::vector<int>::iterator it = std::find(varsByClause->at(v).begin(), varsByClause->at(v).end(), c * assignments->at(varIndex));
+
+					std::cout << "satisfied c = " << c << "  varIndex = " << varIndex << "  assignments@varIndex = " << assignments->at(varIndex) << std::endl;
+					if (it != varsByClause->at(v).end()) {
+						varsByClause->at(v).erase(it);
+					}
+				}
+			}
 			else if (clauses->at(c).at(l) == (varIndex + 1) * assignments->at(varIndex) * -1) {
+				std::cout << "unsatisfied c = " << c << "  varIndex = " << varIndex << "  assignments@varIndex = " << assignments->at(varIndex) << std::endl;
+
+				varsByClause->at(varIndex).erase(std::find(varsByClause->at(varIndex).begin(), varsByClause->at(varIndex).end(), c * assignments->at(varIndex) * -1));
+
 				if (clauses->at(c).size() == 1)
 					sats->at(c) = -1;
 				else {
-					clauses->at(c).erase(clauses->at(c).begin() + l);	
+					clauses->at(c).erase(clauses->at(c).begin() + l);
 					l--;
 				}
 			}
 		}
 	}
-
 }

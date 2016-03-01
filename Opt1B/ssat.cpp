@@ -7,8 +7,8 @@
 enum SolutionType { naive };
 
 // prototypes
-int readSSATFile(std::string fileName, std::vector<double>*, std::vector<std::vector<int>>*);
-double solve(SolutionType, std::vector<double>*, std::vector<std::vector<int>>*, std::vector<int>*, std::vector<int>);
+int readSSATFile(std::string fileName, std::vector<double>*, std::vector<std::vector<int>>*, std::vector<std::vector<int>>*);
+double solve(SolutionType, std::vector<double>*, std::vector<std::vector<int>>*, std::vector<int>*, std::vector<int>, std::vector<std::vector<int>>*);
 
 int main(int argc, char* argv[]) {
 
@@ -35,9 +35,10 @@ int main(int argc, char* argv[]) {
 	std::vector<int> assignments;
 	std::vector<std::vector<int>> clauses;
 	std::vector<int> clauseSats;
+	std::vector<std::vector<int>> varsByClause;
 
 	// file IO
-	if (readSSATFile(fileName, &variables, &clauses) == 1) {
+	if (readSSATFile(fileName, &variables, &clauses, &varsByClause) == 1) {
 		return 1;
 	}
 
@@ -50,7 +51,7 @@ int main(int argc, char* argv[]) {
 		clauseSats.push_back(0);
 	}
 
-	double solutionProb = solve(directions, &variables, &clauses, &clauseSats, assignments);
+	double solutionProb = solve(directions, &variables, &clauses, &clauseSats, assignments, &varsByClause);
 	std::cout << "Solution is:  " << solutionProb << std::endl;
 
 	return 0;
@@ -58,7 +59,8 @@ int main(int argc, char* argv[]) {
 
 int readSSATFile(std::string fileName,
 				std::vector<double>* variables, 
-				std::vector<std::vector<int>>* clauses)
+				std::vector<std::vector<int>>* clauses,
+				std::vector<std::vector<int>>* varsByClause)
 {
 	std::cout << "Reading in " << fileName << std::endl;
 
@@ -79,11 +81,12 @@ int readSSATFile(std::string fileName,
 				double varValue = 0.0;
 				ss >> varName >> varValue;
 				variables->push_back(varValue);
+				varsByClause->push_back(std::vector<int>());
 				getline(file, line);
 			}
 		}
 		if (line.compare("clauses") == 0) {
-			getline(file, line);
+			getline(file, line);			
 			while(line.compare("") != 0) {
 				std::vector<int> clause;
 				std::stringstream ss(line);
@@ -91,9 +94,14 @@ int readSSATFile(std::string fileName,
 				ss >> literal;
 				while (literal != 0) {
 					clause.push_back(literal);
+					int litSign = 1;
+					if (literal < 0)
+						litSign = -1;
+					varsByClause->at(abs(literal) - 1).push_back(clauses->size() * litSign);
 					ss >> literal;
 				}
 				clauses->push_back(clause);
+
 				getline(file,line);
 			}
 		}
@@ -106,7 +114,8 @@ double solve(SolutionType directions,
 		   std::vector<double>* variables,
 		   std::vector<std::vector<int>>* clauses,
 		   std::vector<int>* clauseSats,
-		   std::vector<int> assignments)
+		   std::vector<int> assignments,
+		   std::vector<std::vector<int>>* varsByClause)
 {
 	// loop through clause satisfaction, checking for fully satisfied or any unsatisfied
 	bool allSat = true;
@@ -143,7 +152,7 @@ double solve(SolutionType directions,
 			}
 		}
 	}
-	double probSatFalse = solve(directions, variables, &falseCopy, &falseSats, assignments);
+	double probSatFalse = solve(directions, variables, &falseCopy, &falseSats, assignments, varsByClause);
 
 	// trying true
 	assignments[nextVarIndex] = 1;
@@ -166,7 +175,7 @@ double solve(SolutionType directions,
 			}
 		}
 	}
-	double probSatTrue = solve(directions, variables, &trueCopy, &trueSats, assignments);
+	double probSatTrue = solve(directions, variables, &trueCopy, &trueSats, assignments, varsByClause);
 
 	if (variables->at(nextVarIndex) == -1) { 	// v is a choice variable
 		return std::max(probSatFalse, probSatTrue);

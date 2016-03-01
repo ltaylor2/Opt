@@ -1,26 +1,24 @@
 #include <vector>
 #include <iostream>
-
-struct Variable {
-	int name;
-	double probability;
-};
+#include <fstream>
+#include <sstream>
 
 enum SolutionType { naive };
 
 // prototypes
-void readSSFile(std::string fileName, std::vector<Variable>*, std::vector<std::vector<int>>);
-void solve(SolutionType, std::vector<Variable>*, std::vector<std::vector<int>>*, std::vector<bool>*, double*);
+int readSSATFile(std::string fileName, std::vector<double>*, std::vector<std::vector<int>>*);
+void solve(SolutionType, std::vector<double>*, std::vector<std::vector<int>>*, std::vector<bool>*, double*);
 
 int main(int argc, char* argv[]) {
 
+	// read in cmd line arguments
 	if (argc != 3) {
-		std::cout << "Invalid Arguments. Exiting." << std::endl;
+		std::cout << "Invalid Arguments (" << argc << ") Exiting." << std::endl;
 		return 1;
 	}
 
 	SolutionType directions;
-	if (argv[1] == 'n') {
+	if (std::string(argv[1]).compare("n") == 0) {
 		directions = SolutionType::naive;
 	}
 	else {
@@ -29,18 +27,19 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	std::string fileName = argv[2];
+	std::string fileName = std::string(argv[2]);
 
 	// data structures
-	std::vector<Variable> variables;
+	std::vector<double> variables;
 	std::vector<bool> assignments;
 
 	std::vector<std::vector<int>> clauses;
 
 	double solutionProb;
 	// file IO
-
-	std::cout << "Hello World!" << std::endl;
+	if (readSSATFile(fileName, &variables, &clauses) == 1) {
+		return 1;
+	}
 
 	solve(directions, &variables, &clauses, &assignments, &solutionProb);
 	// call appropriate solver
@@ -54,26 +53,58 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 
-void readSSFile(std::string fileName,
-				std::vector<Variable>* variables, 
+int readSSATFile(std::string fileName,
+				std::vector<double>* variables, 
 				std::vector<std::vector<int>>* clauses)
 {
-	// read in the file
+	std::cout << "Reading in " << fileName << std::endl;
 
-	// fill the argument vectors
-	
-	return;
+	std::ifstream file(fileName);
+
+	if (!file) {
+		std::cout << "Failed to open file. Exiting." << std::endl;
+		return 1;
+	}
+
+	std::string line;
+	while(getline(file, line)) {
+		if (line.compare("variables") == 0) {
+			getline(file, line);
+			while(line.compare("") != 0) {
+				std::stringstream ss(line);
+				int varName = 0;
+				double varValue = 0.0;
+				ss >> varName >> varValue;
+				variables->push_back(varValue);
+				getline(file, line);
+			}
+		}
+		if (line.compare("clauses") == 0) {
+			getline(file, line);
+			while(line.compare("") != 0) {
+				std::vector<int> clause;
+				std::stringstream ss(line);
+				int literal = variables->size() + 1;
+				ss >> literal;
+				while (literal != 0) {
+					clause.push_back(literal);
+					ss >> literal;
+					std::cout << literal << "   ";
+				}
+				std::cout << "\n";
+				clauses->push_back(clause);
+				getline(file,line);
+			}
+		}
+	}
+
+	return 0;
 }
 
 void solve(SolutionType directions,
-		   std::vector<Variable>* variables,
+		   std::vector<double>* variables,
 		   std::vector<std::vector<int>>* clauses,
 		   std::vector<bool>* assignments,
 		   double* solutionProb)
 {
-	if (directions == SolutionType::naive)
-		std::cout << "testing complete" << std::endl;
-	else
-		std::cout << "whoops" << std::endl;
-	return;
 }

@@ -50,7 +50,6 @@ int main(int argc, char* argv[]) {
 		clauseSats.push_back(0);
 	}
 
-
 	double solutionProb = solve(directions, &variables, &clauses, clauseSats, assignments);
 	std::cout << "Solution is:  " << solutionProb << std::endl;
 
@@ -128,12 +127,12 @@ double solve(SolutionType directions,
 	assignments[nextVarIndex] = -1;
 	std::vector<std::vector<int>> falseCopy(*clauses);	// a copy so we don't have to revert changes
 	// satisfy clauses
-	for (int c = 0; c < falseCopy.size(); c++) {
-		for (int l = 0; l < falseCopy[c].size(); l++) {
+	for (unsigned int c = 0; c < falseCopy.size(); c++) {
+		for (unsigned int l = 0; l < falseCopy[c].size(); l++) {
 			if (falseCopy[c][l] == (nextVarIndex + 1) * assignments[nextVarIndex]) {
 				clauseSats[c] = 1;
 			} else if (falseCopy[c][l] == (nextVarIndex + 1) * assignments[nextVarIndex] * -1) {
-				falseCopy[c].erase(falseCopy[c].begin() + nextVarIndex);
+				falseCopy[c].erase(falseCopy[c].begin() + l);
 				l--;
 			}
 		}
@@ -144,12 +143,12 @@ double solve(SolutionType directions,
 	assignments[nextVarIndex] = 1;
 	std::vector<std::vector<int>> trueCopy(*clauses);	// a copy so we don't have to revert changes
 	// satisfy clauses
-	for (int c = 0; c < trueCopy.size(); c++) {
-		for (int l = 0; l < trueCopy[c].size(); l++) {
+	for (unsigned int c = 0; c < trueCopy.size(); c++) {
+		for (unsigned int l = 0; l < trueCopy[c].size(); l++) {
 			if (trueCopy[c][l] == (nextVarIndex + 1) * assignments[nextVarIndex]) {
 				clauseSats[c] = 1;
 			} else if (trueCopy[c][l] == (nextVarIndex + 1) * assignments[nextVarIndex] * -1) {
-				trueCopy[c].erase(trueCopy[c].begin() + nextVarIndex);
+				trueCopy[c].erase(trueCopy[c].begin() + l);
 				l--;
 			}
 		}

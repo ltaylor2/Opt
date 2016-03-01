@@ -138,7 +138,7 @@ double solve(SolutionType directions,
 		return 1.0;
 
 
-	// find the next pure variable in the ordering
+	// find the next unit clause (regardless of ordering)
 	if (directions == SolutionType::unit) {
 		std::vector<std::vector<int>> unitCopy(*clauses);
 		std::vector<int> unitSats(*clauseSats);

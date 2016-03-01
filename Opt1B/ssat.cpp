@@ -177,39 +177,23 @@ double solve(SolutionType directions,
 
 		int pureVar = -1;
 		for (int l = 0; l < (signed int)pureVBC.size(); l++) {
-			std::cout << "here" << std::endl;
 			if (variables->at(l) != -1 || assignments[l] == 0)	// only looking at unassigned choice variables
 				continue;
-			std::cout << "2" << std::endl;
 			for (unsigned int c = 1; c < varsByClause->at(l).size(); c++) {
 				pureVar = l;
 				if (!((pureVBC[l][c-1] < 0 && pureVBC[l][c] < 0) || (pureVBC[l][c-1] > 0 && pureVBC[l][c] > 0)) || pureVBC[l].size() <= 1) {
 					pureVar = -1;	// know it's not pure
-					std::cout << "breakage" << std::endl;
 					break;		// so move on to the next variable
 				}
 			}
-						std::cout << "3" << std::endl;
-
 
 			if (pureVar == l)	// found one
 				break;			// use it as the pure
 		}
-			std::cout << "4     " << pureVar << std::endl;
-			std::cout << std::endl;
 
 		if (pureVar != -1) {	// now assign pure var correctly, check for satisfaction, etc.
-			for (unsigned int t = 0; t < pureVBC[pureVar].size(); t++) {
-				std::cout << pureVBC[pureVar][t] << " ";
-			} std::cout << std::endl;
-
-			std::cout << "assigning " << pureVar << "  along " << pureVBC[pureVar].size() << std::endl;
 			assignments[pureVar] = pureVBC[pureVar][0] / abs(pureVBC[pureVar][0]);
-
-			std::cout << "satisfying" << std::endl;
 			satisfyClauses(pureVar, &pureCopy, &pureSats, &assignments, &pureVBC);
-
-			std::cout << "solving" << std::endl;
 			return solve(directions, variables, &pureCopy, &pureSats, assignments, &pureVBC);
 		}
 	}
@@ -246,25 +230,23 @@ double solve(SolutionType directions,
 void satisfyClauses(int varIndex, std::vector<std::vector<int>>* clauses, std::vector<int>* sats, std::vector<int>* assignments, std::vector<std::vector<int>>* varsByClause)
 {
 	for (int c = 0; c < (signed int)clauses->size(); c++) {
-		if (sats->at(c) == 1)
+		if (sats->at(c) == 1) {
 			continue;
+		}
+
 		for (unsigned int l = 0; l < clauses->at(c).size(); l++) {
 			if (clauses->at(c).at(l) == (varIndex + 1) * assignments->at(varIndex)) {
 				sats->at(c) = 1;
-
 				// now that a clause is satisfied, erase that clause from all the variable's list of active clauses
 				for (unsigned int v = 0; v < varsByClause->size(); v++) {
 					std::vector<int>::iterator it = std::find(varsByClause->at(v).begin(), varsByClause->at(v).end(), c * assignments->at(varIndex));
 
-					std::cout << "satisfied c = " << c << "  varIndex = " << varIndex << "  assignments@varIndex = " << assignments->at(varIndex) << std::endl;
 					if (it != varsByClause->at(v).end()) {
 						varsByClause->at(v).erase(it);
 					}
 				}
 			}
 			else if (clauses->at(c).at(l) == (varIndex + 1) * assignments->at(varIndex) * -1) {
-				std::cout << "unsatisfied c = " << c << "  varIndex = " << varIndex << "  assignments@varIndex = " << assignments->at(varIndex) << std::endl;
-
 				varsByClause->at(varIndex).erase(std::find(varsByClause->at(varIndex).begin(), varsByClause->at(varIndex).end(), c * assignments->at(varIndex) * -1));
 
 				if (clauses->at(c).size() == 1)

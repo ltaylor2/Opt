@@ -8,7 +8,7 @@ enum SolutionType { naive };
 
 // prototypes
 int readSSATFile(std::string fileName, std::vector<double>*, std::vector<std::vector<int>>*);
-double solve(SolutionType, std::vector<double>*, std::vector<std::vector<int>>*, std::vector<int>, std::vector<int>);
+double solve(SolutionType, std::vector<double>*, std::vector<std::vector<int>>*, std::vector<int>*, std::vector<int>);
 
 int main(int argc, char* argv[]) {
 
@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
 		clauseSats.push_back(0);
 	}
 
-	double solutionProb = solve(directions, &variables, &clauses, clauseSats, assignments);
+	double solutionProb = solve(directions, &variables, &clauses, &clauseSats, assignments);
 	std::cout << "Solution is:  " << solutionProb << std::endl;
 
 	return 0;
@@ -105,15 +105,15 @@ int readSSATFile(std::string fileName,
 double solve(SolutionType directions,
 		   std::vector<double>* variables,
 		   std::vector<std::vector<int>>* clauses,
-		   std::vector<int> clauseSats,
+		   std::vector<int>* clauseSats,
 		   std::vector<int> assignments)
 {
 	// loop through clause satisfaction, checking for fully satisfied or any unsatisfied
 	bool allSat = true;
-	for (unsigned int i = 0; i < clauseSats.size(); i++) {
-		if (clauseSats[i] == -1)		// any unsatisfied means that the SSAT is unsatisfied
+	for (unsigned int i = 0; i < clauseSats->size(); i++) {
+		if (clauseSats->at(i) == -1)		// any unsatisfied means that the SSAT is unsatisfied
 			return 0.0;
-		else if (clauseSats[i] == 0) {	// a non-satisfied (but not unsatisfied) clause
+		else if (clauseSats->at(i) == 0) {	// a non-satisfied (but not unsatisfied) clause
 			allSat = false;
 		}
 	}
@@ -122,42 +122,55 @@ double solve(SolutionType directions,
 
 	// there is guaranteed to be a 0 in assignments, because if there was not we would have retunred from allSat == TRUE
 	int nextVarIndex = std::distance(assignments.begin(), std::find(assignments.begin(), assignments.end(), 0));
-
 	// trying false
 	assignments[nextVarIndex] = -1;
 	std::vector<std::vector<int>> falseCopy(*clauses);	// a copy so we don't have to revert changes
+	std::vector<int> falseSats(*clauseSats);
 	// satisfy clauses
 	for (unsigned int c = 0; c < falseCopy.size(); c++) {
+		if (falseSats[c] == 1)
+			continue;
 		for (unsigned int l = 0; l < falseCopy[c].size(); l++) {
 			if (falseCopy[c][l] == (nextVarIndex + 1) * assignments[nextVarIndex]) {
-				clauseSats[c] = 1;
+				falseSats[c] = 1;
 			} else if (falseCopy[c][l] == (nextVarIndex + 1) * assignments[nextVarIndex] * -1) {
-				falseCopy[c].erase(falseCopy[c].begin() + l);
-				l--;
+				if (falseCopy[c].size() == 1)
+					falseSats[c] = -1;
+				else {
+					falseCopy[c].erase(falseCopy[c].begin() + l);	
+					l--;
+				}
 			}
 		}
 	}
-	double probSatFalse = solve(directions, variables, &falseCopy, clauseSats, assignments);
+	double probSatFalse = solve(directions, variables, &falseCopy, &falseSats, assignments);
 
 	// trying true
 	assignments[nextVarIndex] = 1;
 	std::vector<std::vector<int>> trueCopy(*clauses);	// a copy so we don't have to revert changes
+	std::vector<int> trueSats(*clauseSats);
 	// satisfy clauses
 	for (unsigned int c = 0; c < trueCopy.size(); c++) {
+		if (trueSats[c] == 1)
+			continue;
 		for (unsigned int l = 0; l < trueCopy[c].size(); l++) {
 			if (trueCopy[c][l] == (nextVarIndex + 1) * assignments[nextVarIndex]) {
-				clauseSats[c] = 1;
+				trueSats[c] = 1;
 			} else if (trueCopy[c][l] == (nextVarIndex + 1) * assignments[nextVarIndex] * -1) {
-				trueCopy[c].erase(trueCopy[c].begin() + l);
-				l--;
+				if (trueCopy[c].size() == 1)
+					trueSats[c] = -1;
+				else {
+					trueCopy[c].erase(trueCopy[c].begin() + l);
+					l--;
+				}
 			}
 		}
 	}
-	double probSatTrue = solve(directions, variables, &trueCopy, clauseSats, assignments);
+	double probSatTrue = solve(directions, variables, &trueCopy, &trueSats, assignments);
 
-	if (variables->at(nextVarIndex) == -1 || variables->at(nextVarIndex) == 1) { 	// v is a choice variable
+	if (variables->at(nextVarIndex) == -1) { 	// v is a choice variable
 		return std::max(probSatFalse, probSatTrue);
 	}
-
+	// v is a chance variable
 	return probSatTrue * variables->at(nextVarIndex) + probSatFalse * (1 - variables->at(nextVarIndex));
 }

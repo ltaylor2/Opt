@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <chrono>
 
-enum SolutionType { naive, unit, pure };
+enum SolutionType { naive, unit, pure, both, hOne, hTwo, hThree };
 
 // prototypes
 int readSSATFile(std::string fileName, std::vector<double>*, std::vector<std::vector<int>>*, std::vector<std::vector<int>>*);
@@ -27,6 +27,8 @@ int main(int argc, char* argv[])
 		directions = SolutionType::unit;
 	else if (std::string(argv[1]).compare("p") == 0)
 		directions = SolutionType::pure;
+	else if (std::string(argv[1]).compare("b") == 0)
+		directions = SolutionType::both;
 	else {
 		std::cout << "---" << argv[1] << "---" << std::endl;
 		std::cout << "Incorrect solving directions. Exiting." << std::endl;
@@ -141,7 +143,7 @@ double solve(SolutionType directions,
 
 
 	// find the next unit clause (regardless of ordering)
-	if (directions == SolutionType::unit) {
+	if (directions == SolutionType::unit || directions == SolutionType::both) {
 		std::vector<std::vector<int>> unitCopy(*clauses);
 		std::vector<int> unitSats(*clauseSats);
 		std::vector<std::vector<int>> unitVBC(*varsByClause);
@@ -170,7 +172,7 @@ double solve(SolutionType directions,
 	}
 
 	// find pure choice variables
-	if (directions == SolutionType::pure) {
+	if (directions == SolutionType::pure || directions == SolutionType::both) {
 		std::vector<std::vector<int>> pureCopy(*clauses);
 		std::vector<int> pureSats(*clauseSats);
 		std::vector<std::vector<int>> pureVBC(*varsByClause);

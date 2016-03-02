@@ -177,7 +177,7 @@ double solve(SolutionType directions,
 
 		int pureVar = -1;
 		for (int l = 0; l < (signed int)pureVBC.size(); l++) {
-			if (variables->at(l) != -1 || assignments[l] == 0)	// only looking at unassigned choice variables
+			if (variables->at(l) != -1 || assignments[l] != 0)	// only looking at unassigned choice variables
 				continue;
 			for (unsigned int c = 1; c < varsByClause->at(l).size(); c++) {
 				pureVar = l;
@@ -230,13 +230,13 @@ double solve(SolutionType directions,
 void satisfyClauses(int varIndex, std::vector<std::vector<int>>* clauses, std::vector<int>* sats, std::vector<int>* assignments, std::vector<std::vector<int>>* varsByClause)
 {
 	for (int c = 0; c < (signed int)clauses->size(); c++) {
-		if (sats->at(c) == 1) {
+		if (sats->at(c) == 1)
 			continue;
-		}
 
 		for (unsigned int l = 0; l < clauses->at(c).size(); l++) {
-			if (clauses->at(c).at(l) == (varIndex + 1) * assignments->at(varIndex)) {
+			if (clauses->at(c)[l] == (varIndex + 1) * assignments->at(varIndex)) {
 				sats->at(c) = 1;
+
 				// now that a clause is satisfied, erase that clause from all the variable's list of active clauses
 				for (unsigned int v = 0; v < varsByClause->size(); v++) {
 					std::vector<int>::iterator it = std::find(varsByClause->at(v).begin(), varsByClause->at(v).end(), c * assignments->at(varIndex));
@@ -246,7 +246,7 @@ void satisfyClauses(int varIndex, std::vector<std::vector<int>>* clauses, std::v
 					}
 				}
 			}
-			else if (clauses->at(c).at(l) == (varIndex + 1) * assignments->at(varIndex) * -1) {
+			else if (clauses->at(c)[l] == (varIndex + 1) * assignments->at(varIndex) * -1) {
 				varsByClause->at(varIndex).erase(std::find(varsByClause->at(varIndex).begin(), varsByClause->at(varIndex).end(), c * assignments->at(varIndex) * -1));
 
 				if (clauses->at(c).size() == 1)

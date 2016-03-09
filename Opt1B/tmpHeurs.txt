@@ -1,0 +1,59 @@
+HEURISTIC 1: 
+
+int minClauseLength = MAX_INT;
+int variable = -1;
+int assignment = 0;
+
+FIND CURR UNASSIGNED VAR (first 0 in assignments vector)
+DETMINE BLOCK (choice or chance)
+
+for (i in current blocks' variables)
+	for (c in current variable's clause list)
+	int currSize = clauses[abs(varsByClause[i][c]-1)].size()
+
+	if currSize < minClauseLength
+		minClause = currSize
+		variable = i;
+		assignment = abs(varsByClause[i][c]) / varsByClause[i][c]; - 1
+
+
+Set the real things
+
+
+HEURISTIC 2:
+
+int h2maxCount = 0;
+int h2Var = -1;
+int h2Assignment = 0;
+
+FIND CURR UNASSIGNED VAR (first 0 in assignments vector)
+DETERMINE BLOCK (choice or chance)
+
+for (i in current block' variables)
+	int currPosCount = 0;
+	int currNegCount = 0;
+	int currAssignment = -1;
+	for (c in varsByClause[i])
+		if (abs(varsByClause[i][c]) / varsByClause[i][c] == 1)
+			currPosCount++;
+		else if (abs(varsByClause[i][c]) / varsByClause[i][c] == -1)
+			currNegCount++;
+
+		if (variables[i] != -1)
+			currPosCount *= variables[i];
+			currNegCount *= (1 - variables[i]);
+
+		if currPosCount > currNegCount
+			currAssignment = 1;
+
+		if max(currPosCount, currNegCount) > h2MaxCount
+			h2MaxCount = max(currPosCount, currNegCount)
+			h2Var = i;
+			h2Assignment = currAssignment;
+
+Set the real things
+
+
+
+HEURISTIC 3:
+	

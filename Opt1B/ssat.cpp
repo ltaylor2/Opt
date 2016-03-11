@@ -327,8 +327,34 @@ double solve(SolutionType directions,
    			}
    		}
     }
-
     if (directions == SolutionType::hTwo) {
+    	int maxCount = 0;
+
+    	bool choiceVar = (variables->at(nextVarIndex) == -1);
+
+    	bool currBlock = true;
+
+    	for (int i = nextVarIndex; currBlock; i++) {
+    		int currCount = 0;
+
+    		if (i+1 == varsByClause.size()
+    			|| (choiceVar && (variables->at(i+1) != -1))
+    			|| (!choiceVar && (variables->at(i+1) == 1)))
+    			currBlock = false;
+
+    		if (assignments->at(i) != 0)
+    			continue;
+
+    		currCount = varsByClause[nextVarIndex].size();
+
+    		if (currCount > maxCount) {
+    			maxCount = currCount;
+    			nextVarIndex = i;
+    		}
+    	}
+    }
+    
+    if (directions == SolutionType::hThree) {
     	double maxCount = 0.0;
 
    		// decide the current block

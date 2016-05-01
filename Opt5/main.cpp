@@ -1,16 +1,27 @@
-#include <stdio>
+#include <iostream>
+#include <cstring>
+#include <iomanip>
 
 #define NUM_STATES 65
 #define NUM_ACTIONS 4
+#define PRINT_UTILITY_PRECISION 3
 
 #define N 0
 #define E 1
 #define S 2
 #define W 3
 
-std::pair(double[][][], double[]) initMDP();
+double T[NUM_STATES][NUM_ACTIONS][NUM_STATES];
+double R[NUM_STATES];
 
-int main(int argc, char* argv[]) {
+enum Iter {Value, Policy};
+
+void initMDP(double, double, double, double);
+void printUtilitiesAndPolicy(double[], int[]);
+std::string action(int);
+
+int main(int argc, char* argv[])
+{
 
 	// help/cmd errors
 	if (argc != 8) {
@@ -21,30 +32,153 @@ int main(int argc, char* argv[]) {
 					<< "4: Positive terminal reward (Double)" << std::endl
 					<< "5: Negative terminal reward (Double)" << std::endl
 					<< "6: Step cost (double)" << std::endl
-					<< "7: Value iteration (double)" << std::endl;
+					<< "7: Iteration type? (v or p)" << std::endl;
 		return -1;
 	}
 
 	// reading in args for problem parameters
-	std::string filename = string(argv[1]);
-	double discount = atof(argv[2]);
-	double epsilon = atof(argv[3]);
-	double keyLoss = atof(argv[4]);
-	double posTerminal = atof(argv[5]);
-	double negTerminal = atof(argv[6]);
-	double stepCost = atof(argv[7]);
-	double valueIteration = atof(arg[8]);
+	double discount = atof(argv[1]);
+	double epsilon = atof(argv[2]);
+	double keyLoss = atof(argv[3]);
+	double posTerminal = atof(argv[4]);
+	double negTerminal = atof(argv[5]);
+	double stepCost = atof(argv[6]);
 
-	init = initMDP();
-	double[][][] transitions = init.first;
-	double[] rewards = init.second;
+	std::string iterArg(argv[7]);
 
+	Iter iter;
+	if (iterArg.compare("v") == 0) 
+		iter = Iter::Value;
+	else if (iterArg.compare("p") == 0)
+		iter = Iter::Policy;
+	else {
+		std::cout << "Incorrect iteration type specified (not v or p)" << std::endl;
+		return 1;
+	}
+	std::string valueIteration(argv[7]);
+
+	initMDP(negTerminal, posTerminal, stepCost, keyLoss);
+
+	double utility[NUM_STATES];
+	int policy[NUM_STATES];
+
+	for (int i = 0; i < NUM_STATES; i++) {
+		utility[i] = 1.111111111;
+		policy[i] = N;
+	}
+
+	printUtilitiesAndPolicy(utility, policy);
+	return 0;
 }
 
-std::pair(double[][][], double[]) initMDP(double stepCost, ) {
-	double[][][] transitions = double[NUM_STATES][NUM_ACTIONS][NUM_STATES];
+void printUtilitiesAndPolicy(double utility[], int policy[])
+{
+	
+	// formateString is a C-style format string to use with Java's printf-wannabe
+	// method; the format string specifies what the output should look like, including
+	// format specifications for values, and the actual items to be printed are
+	// the arguments to printf that come after the format string.  in the following,
+	// if PRINT_UTILITY_PRECISION is 2, the format string would be:
+	//
+	//    "%s%2d%s %.2f %s    "
+	//
+	// This means that the output will be:
+	//    a string,
+	//    an integer that should be printed in 2 spaces, 
+	//    a string,
+	//    a space (spaces in the format string are printed literally),
+	//    a floating-point number printed in 5 spaces with 
+	//          PRINT_UTILITY_PRECISION digits after the decimal point, 
+	//    a space,
+	//    a string, and
+	//    4 spaces.
+	//
+	// The arguments that come after specify *what* string, *what* integer, etc.
 
-	double[] rewards = double[NUM_STATES];
+	for (int s = 58 ; s <= 64 ; s += 2)
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+	std::cout << std::endl;
+	
+	for (int s = 59 ; s <= 63 ; s += 2)
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+	std::cout << std::endl << std::endl;
+	
+	
+	for (int s = 50 ; s <= 56 ; s += 2)
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+	std::cout << std::endl;
+	
+	for (int s = 51 ; s <= 57 ; s += 2)
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+	
+	for (int s = 40 ; s <= 48 ; s += 2)
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+	
+	for (int s = 41 ; s <= 49 ; s += 2)
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+	std::cout << std::endl;
+	std::cout << std::endl;
+	
+	
+	for (int s = 30 ; s <= 38 ; s += 2)
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+	std::cout << std::endl;
+	
+	for (int s = 31 ; s <= 39 ; s += 2)
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+	std::cout << std::endl;
+	std::cout << std::endl;
+	
+	
+	for (int s = 0 ; s <= 14 ; s += 2) {
+	    if (s < 10)
+			std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+	    else
+			std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+	}
+	std::cout << std::endl;
+	
+	for (int s = 1 ; s <= 15 ; s += 2) {
+	    if (s < 10)
+			std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+	    else
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+	}
+	std::cout << std::endl;
+	std::cout << std::endl;
+	std::cout << std::endl;
+	
+	std::cout << "    ";
+	for (int s = 16 ; s <= 28 ; s += 2)
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+	std::cout << std::endl;
+	
+	std::cout << "    ";
+	for (int s = 17 ; s <= 29 ; s += 2)
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+	std::cout << std::endl;
+	std::cout << std::endl;
+
+}
+    
+std::string action(int a)
+{
+	switch (a) {
+	    
+	   case N: return "N";
+	    
+	   case E: return "E";
+	    
+	   case S: return "S";
+	    
+	   case W: return "W";
+
+	   default: return "X";
+	}
+}
+
+void initMDP(double negTerminal, double posTerminal, double stepCost, double keyLoss)
+{
 
 	// initializing rewards
 	for (int s = 0; s < NUM_STATES; s++) {
@@ -54,16 +188,16 @@ std::pair(double[][][], double[]) initMDP(double stepCost, ) {
     // reset the rewards for terminal states
  	R[44] = negTerminal;
  	R[45] = negTerminal;
- 	R[48] = negTerinal;
+ 	R[48] = negTerminal;
  	R[49] = negTerminal;
 
  	R[28] = posTerminal;
 
 
 	// initialize all transition probabilities to 0.0
-	for(int s1 = 0 ; s1 < NUM_STATES ; s1++)
-	    for(int a = 0 ; a < NUM_ACTIONS ; a++)
-			for(int s2 = 0 ; s2 < NUM_STATES ; s2++)
+	for (int s1 = 0 ; s1 < NUM_STATES ; s1++)
+	    for (int a = 0 ; a < NUM_ACTIONS ; a++)
+			for (int s2 = 0 ; s2 < NUM_STATES ; s2++)
 		    	T[s1][a][s2] = 0.0;
 
 	// reset those transition probabilities that are NOT 0
@@ -508,12 +642,12 @@ std::pair(double[][][], double[]) initMDP(double stepCost, ) {
 
 
 	T[30][N][30] = 0.1;
-	T[30][N][40] = 0.8 * (1.0 - keyLossProbability);
-	T[30][N][41] = 0.8 * keyLossProbability;
+	T[30][N][40] = 0.8 * (1.0 - keyLoss);
+	T[30][N][41] = 0.8 * keyLoss;
 	T[30][N][32] = 0.1;
 
-	T[30][E][40] = 0.1 * (1.0 - keyLossProbability);
-	T[30][E][41] = 0.1 * keyLossProbability;
+	T[30][E][40] = 0.1 * (1.0 - keyLoss);
+	T[30][E][41] = 0.1 * keyLoss;
 	T[30][E][32] = 0.8;
 	T[30][E][0] = 0.1;
 
@@ -523,8 +657,8 @@ std::pair(double[][][], double[]) initMDP(double stepCost, ) {
 
 	T[30][W][0] = 0.1;
 	T[30][W][30] = 0.8;
-	T[30][W][40] = 0.1 * (1.0 - keyLossProbability);
-	T[30][W][41] = 0.1 * keyLossProbability;
+	T[30][W][40] = 0.1 * (1.0 - keyLoss);
+	T[30][W][41] = 0.1 * keyLoss;
 
 
 	T[31][N][31] = 0.1;
@@ -680,8 +814,8 @@ std::pair(double[][][], double[]) initMDP(double stepCost, ) {
 	T[39][W][49] = 0.1;
 
 
-	T[40][N][40] = 0.1 * (1.0 - keyLossProbability);
-	T[40][N][41] = 0.1 * keyLossProbability;
+	T[40][N][40] = 0.1 * (1.0 - keyLoss);
+	T[40][N][41] = 0.1 * keyLoss;
 	T[40][N][50] = 0.8;
 	T[40][N][42] = 0.1;
 
@@ -691,12 +825,12 @@ std::pair(double[][][], double[]) initMDP(double stepCost, ) {
 
 	T[40][S][42] = 0.1;
 	T[40][S][30] = 0.8;
-	T[40][S][40] = 0.1 * (1.0 - keyLossProbability);
-	T[40][S][41] = 0.1 * keyLossProbability;
+	T[40][S][40] = 0.1 * (1.0 - keyLoss);
+	T[40][S][41] = 0.1 * keyLoss;
 
 	T[40][W][30] = 0.1;
-	T[40][W][40] = 0.8 * (1.0 - keyLossProbability);
-	T[40][W][41] = 0.8 * keyLossProbability;
+	T[40][W][40] = 0.8 * (1.0 - keyLoss);
+	T[40][W][41] = 0.8 * keyLoss;
 	T[40][W][50] = 0.1;
 
 
@@ -717,8 +851,8 @@ std::pair(double[][][], double[]) initMDP(double stepCost, ) {
 	T[41][W][51] = 0.1;
 
 
-	T[42][N][40] = 0.1 * (1.0 - keyLossProbability);
-	T[42][N][41] = 0.1 * keyLossProbability;
+	T[42][N][40] = 0.1 * (1.0 - keyLoss);
+	T[42][N][41] = 0.1 * keyLoss;
 	T[42][N][52] = 0.8;
 	T[42][N][44] = 0.1;
 
@@ -728,12 +862,12 @@ std::pair(double[][][], double[]) initMDP(double stepCost, ) {
 
  	T[42][S][44] = 0.1;
 	T[42][S][32] = 0.8;
-  	T[42][S][40] = 0.1 * (1.0 - keyLossProbability);
-  	T[42][S][41] = 0.1 * keyLossProbability;
+  	T[42][S][40] = 0.1 * (1.0 - keyLoss);
+  	T[42][S][41] = 0.1 * keyLoss;
 	
 	T[42][W][32] = 0.1;
-	T[42][W][40] = 0.8 * (1.0 - keyLossProbability);
-	T[42][W][41] = 0.8 * keyLossProbability;
+	T[42][W][40] = 0.8 * (1.0 - keyLoss);
+	T[42][W][41] = 0.8 * keyLoss;
 	T[42][W][52] = 0.1;
 
 
@@ -800,16 +934,16 @@ std::pair(double[][][], double[]) initMDP(double stepCost, ) {
 
 	T[50][E][58] = 0.1;
 	T[50][E][52] = 0.8;
-	T[50][E][40] = 0.1 * (1.0 - keyLossProbability);
-	T[50][E][41] = 0.1 * keyLossProbability;
+	T[50][E][40] = 0.1 * (1.0 - keyLoss);
+	T[50][E][41] = 0.1 * keyLoss;
 
 	T[50][S][52] = 0.1;
-	T[50][S][40] = 0.8 * (1.0 - keyLossProbability);
-	T[50][S][41] = 0.8 * keyLossProbability;
+	T[50][S][40] = 0.8 * (1.0 - keyLoss);
+	T[50][S][41] = 0.8 * keyLoss;
 	T[50][S][50] = 0.1;
 
-	T[50][W][40] = 0.1 * (1.0 - keyLossProbability);
-	T[50][W][41] = 0.1 * keyLossProbability;
+	T[50][W][40] = 0.1 * (1.0 - keyLoss);
+	T[50][W][41] = 0.1 * keyLoss;
 	T[50][W][50] = 0.8;
 	T[50][W][58] = 0.1;
 
@@ -1046,5 +1180,5 @@ std::pair(double[][][], double[]) initMDP(double stepCost, ) {
 	T[64][W][62] = 0.8;
 	T[64][W][64] = 0.1;
 
-	return std::pair(transitions, rewards);
+	return;
 }

@@ -1,6 +1,8 @@
 #include <iostream>
+#include <cmath>
 #include <cstring>
 #include <iomanip>
+#include <vector>
 
 #define NUM_STATES 65
 #define NUM_ACTIONS 4
@@ -17,9 +19,9 @@ double R[NUM_STATES];
 enum Iter {Value, Policy};
 
 void initMDP(double, double, double, double);
-void printUtilitiesAndPolicy(double[], int[]);
+void printUtilitiesAndPolicy(std::vector<double>, std::vector<int>);
 std::string action(int);
-void valueIteration(double, double, double[], int[]);
+void valueIteration(double, double, std::vector<double>& , std::vector<int>&);
 
 int main(int argc, char* argv[])
 {
@@ -59,12 +61,12 @@ int main(int argc, char* argv[])
 
 	initMDP(negTerminal, posTerminal, stepCost, keyLoss);
 
-	double utility[NUM_STATES];
-	int policy[NUM_STATES];
+	std::vector<double> utility;
+	std::vector<int> policy;
 
 	for (int s = 0; s < NUM_STATES; s++) {
-		utility[s] = 0;
-		policy[s] = N;
+		utility.push_back(0);
+		policy.push_back(N);
 	}
 
 	valueIteration(discount, epsilon, utility, policy);
@@ -72,35 +74,37 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-void valueIteration(double discount, double epsilon, double utility[], int policy[])
+void valueIteration(double discount, double epsilon, std::vector<double> &utility, std::vector<int> &policy)
 {
 	double delta = 0;
 	do {
 		delta = 0;
+
 		for (int s = 0; s < NUM_STATES; s++) {
-			double uSP = 0.0;
+
+			double uSP = 0;
 			double aMaxVal = 0;
 			for (int a = 0; a < NUM_ACTIONS; a++) {
 				double currSum = 0;
 				for (int sP = 0; sP < NUM_STATES; sP++) {
 					currSum += T[s][a][sP] * utility[sP];
 				}
-				if (currSum > aMaxVal) {
+				if (currSum >= aMaxVal) {
 					policy[s] = a;
 					aMaxVal = currSum;
 				}
 			}
-			uSP = R[s] + discount * aMaxVal;
 
-			if (abs(uSP - utility[s]) > delta)
-				delta = abs(uSP - utility[s]);
+			uSP = R[s] + discount * aMaxVal;
+			if (std::abs(uSP - utility[s]) > delta)
+				delta = std::abs(uSP - utility[s]);
 
 			utility[s] = uSP;
 		}
-	} while (delta > epsilon * (1-discount) / discount);
+	} while (delta >= epsilon * (1-discount) / discount);
 }
 
-void printUtilitiesAndPolicy(double utility[], int policy[])
+void printUtilitiesAndPolicy(std::vector<double> utility, std::vector<int> policy)
 {
 	
 	// formateString is a C-style format string to use with Java's printf-wannabe
@@ -211,6 +215,7 @@ void initMDP(double negTerminal, double posTerminal, double stepCost, double key
     // reset the rewards for terminal states
  	R[44] = negTerminal;
  	R[45] = negTerminal;
+
  	R[48] = negTerminal;
  	R[49] = negTerminal;
 

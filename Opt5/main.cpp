@@ -19,6 +19,7 @@ enum Iter {Value, Policy};
 void initMDP(double, double, double, double);
 void printUtilitiesAndPolicy(double[], int[]);
 std::string action(int);
+void valueIteration(double, double, double[], int[]);
 
 int main(int argc, char* argv[])
 {
@@ -55,20 +56,47 @@ int main(int argc, char* argv[])
 		std::cout << "Incorrect iteration type specified (not v or p)" << std::endl;
 		return 1;
 	}
-	std::string valueIteration(argv[7]);
 
 	initMDP(negTerminal, posTerminal, stepCost, keyLoss);
 
 	double utility[NUM_STATES];
 	int policy[NUM_STATES];
 
-	for (int i = 0; i < NUM_STATES; i++) {
-		utility[i] = 1.111111111;
-		policy[i] = N;
+	for (int s = 0; s < NUM_STATES; s++) {
+		utility[s] = 0;
+		policy[s] = N;
 	}
 
+	valueIteration(discount, epsilon, utility, policy);
 	printUtilitiesAndPolicy(utility, policy);
 	return 0;
+}
+
+void valueIteration(double discount, double epsilon, double utility[], int policy[])
+{
+	double delta = 0;
+	do {
+		for (int s = 0; s < NUM_STATES; s++) {
+			double uSP = 0.0;
+			double aMaxVal = 0;
+			for (int a = 0; a < NUM_ACTIONS; a++) {
+				double currSum = 0;
+				for (int sP = 0; sP < NUM_STATES; sP++) {
+					currSum += T[s][a][sP] * utility[sP];
+				}
+				if (currSum > aMaxVal) {
+					policy[s] = a;
+					aMaxVal = currSum;
+				}
+			}
+			uSP = R[s] + discount * aMaxVal;
+
+			if (abs(uSP - utility[s] > delta))
+				delta = abs(uSP - utility[s]);
+
+			utility[s] = uSP;
+		}
+	} while (delta > epsilon * (1-discount) / discount);
 }
 
 void printUtilitiesAndPolicy(double utility[], int policy[])

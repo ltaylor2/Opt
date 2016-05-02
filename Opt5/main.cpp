@@ -3,10 +3,11 @@
 #include <cstring>
 #include <iomanip>
 #include <vector>
+#include <climits>
 
 #define NUM_STATES 65
 #define NUM_ACTIONS 4
-#define PRINT_UTILITY_PRECISION 3
+#define PRINT_UTILITY_PRECISION 2
 
 #define N 0
 #define E 1
@@ -74,33 +75,39 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
+// synchronous, in-place
 void valueIteration(double discount, double epsilon, std::vector<double> &utility, std::vector<int> &policy)
 {
 	double delta = 0;
+
 	do {
 		delta = 0;
-
 		for (int s = 0; s < NUM_STATES; s++) {
 
-			double uSP = 0;
-			double aMaxVal = 0;
+			double uPS = 0;
+			double aMaxVal = INT_MIN;
+
 			for (int a = 0; a < NUM_ACTIONS; a++) {
+
 				double currSum = 0;
 				for (int sP = 0; sP < NUM_STATES; sP++) {
 					currSum += T[s][a][sP] * utility[sP];
 				}
-				if (currSum >= aMaxVal) {
+
+				if (currSum > aMaxVal) {
 					policy[s] = a;
 					aMaxVal = currSum;
 				}
 			}
 
-			uSP = R[s] + discount * aMaxVal;
-			if (std::abs(uSP - utility[s]) > delta)
-				delta = std::abs(uSP - utility[s]);
+			uPS = R[s] + discount * aMaxVal;
 
-			utility[s] = uSP;
+			if (std::abs(uPS - utility[s]) > delta)
+				delta = std::abs(uPS - utility[s]);
+
+			utility[s] = uPS;
 		}
+
 	} while (delta >= epsilon * (1-discount) / discount);
 }
 
@@ -173,7 +180,7 @@ void printUtilitiesAndPolicy(std::vector<double> utility, std::vector<int> polic
 	    if (s < 10)
 			std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
 	    else
-		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+			std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
 	}
 	std::cout << std::endl << std::endl << std::endl;
 	

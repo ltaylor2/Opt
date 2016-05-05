@@ -144,6 +144,7 @@ void valueIteration(double discount, double epsilon, double posTerminal,
 				 discount, epsilon, posTerminal, negTerminal,
 				 utility, policy);
 
+	return;
 }
 
 /*void policyIteration(double discount, std::vector<double> &utility, std::vector<int> &policy)
@@ -240,63 +241,57 @@ void printResults(double solTime, int numIter, Iter iter, double stepCost,
 	//
 	// The arguments that come after specify *what* string, *what* integer, etc.
 
+	std::cout << std::endl << std::endl << std::fixed << std::setprecision(PRINT_UTILITY_PRECISION);
+
 	for (int s = 58 ; s <= 64 ; s += 2)
-		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << std::fixed << utility[s] << " (" << action(policy[s]) << ")    "; 
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << utility[s] << " (" << action(policy[s]) << ")    "; 
 	std::cout << std::endl;
 	
 	for (int s = 59 ; s <= 63 ; s += 2)
-		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << utility[s] << " (" << action(policy[s]) << ")    "; 
 	std::cout << std::endl << std::endl;
 	
 	
 	for (int s = 50 ; s <= 56 ; s += 2)
-		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << utility[s] << " (" << action(policy[s]) << ")    "; 
 	std::cout << std::endl;
 	
 	for (int s = 51 ; s <= 57 ; s += 2)
-		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << utility[s] << " (" << action(policy[s]) << ")    "; 
 	std::cout << std::endl << std::endl;
 
 	for (int s = 40 ; s <= 48 ; s += 2)
-		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << utility[s] << " (" << action(policy[s]) << ")    "; 
 	std::cout << std::endl;
 
 	for (int s = 41 ; s <= 49 ; s += 2)
-		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << utility[s] << " (" << action(policy[s]) << ")    "; 
 	std::cout << std::endl << std::endl;	
 	
 	for (int s = 30 ; s <= 38 ; s += 2)
-		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << utility[s] << " (" << action(policy[s]) << ")    "; 
 	std::cout << std::endl;
 	
 	for (int s = 31 ; s <= 39 ; s += 2)
-		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << utility[s] << " (" << action(policy[s]) << ")    "; 
 	std::cout << std::endl << std::endl;	
 	
-	for (int s = 0 ; s <= 14 ; s += 2) {
-	    if (s < 10)
-			std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
-	    else
-			std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
-	}
+	for (int s = 0 ; s <= 14 ; s += 2)
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << utility[s] << " (" << action(policy[s]) << ")    "; 
 	std::cout << std::endl;
 	
-	for (int s = 1 ; s <= 15 ; s += 2) {
-	    if (s < 10)
-			std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
-	    else
-			std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
-	}
+	for (int s = 1 ; s <= 15 ; s += 2)
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << utility[s] << " (" << action(policy[s]) << ")    "; 
 	std::cout << std::endl << std::endl << std::endl;
 	
 	std::cout << "    ";
 	for (int s = 16 ; s <= 28 ; s += 2)
-		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << utility[s] << " (" << action(policy[s]) << ")    "; 
 	std::cout << std::endl;
 	
 	std::cout << "    ";
 	for (int s = 17 ; s <= 29 ; s += 2)
-		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << utility[s] << " (" << action(policy[s]) << ")    "; 
 	std::cout << std::endl << std::endl;
 
 	std::cout << std::fixed << std::setprecision(1) << "Solution Technique: " << iterStrings[iter] << std::endl << std::endl
@@ -306,7 +301,7 @@ void printResults(double solTime, int numIter, Iter iter, double stepCost,
 		<< "Negative Reward = " << negTerminal << std::endl
 		<< "Step Cost = " << stepCost << std::endl << std::endl
 		<< "# Iterations: " << numIter << std::endl
-		<< "Solution Time: " << std::setprecision(8) << solTime << " seconds" << std::endl;
+		<< "Solution Time: " << std::setprecision(8) << solTime << " seconds" << std::endl << "EXITING" << std::endl << std::endl << std::endl;
 
 	return;
 }

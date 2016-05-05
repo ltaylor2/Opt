@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <vector>
 #include <climits>
+#include <ctime>
 
 #define NUM_STATES 65
 #define NUM_ACTIONS 4
@@ -33,13 +34,16 @@ double T[NUM_STATES][NUM_ACTIONS][NUM_STATES];
 double R[NUM_STATES];
 
 enum Iter {Value, Policy};
+static const std::string iterStrings[] = {"Value Iteration", "Policy Iteration"};
 
 void initMDP(double, double, double, double);
-void printUtilitiesAndPolicy(std::vector<double>, std::vector<int>);
+void valueIteration(double, double, double, double, double);
+void policyIteration(double);
+
 std::string action(int);
-void valueIteration(double, double, std::vector<double>& , std::vector<int>&);
-void policyIteration(double, std::vector<double>&, std::vector<int>&);
 bool extractPolicy(std::vector<double>, std::vector<int>, std::vector<int>);
+
+void printResults(double, int, Iter, double, double, double, double, double, std::vector<double>, std::vector<int>);
 
 int main(int argc, char* argv[])
 {
@@ -79,6 +83,19 @@ int main(int argc, char* argv[])
 
 	initMDP(negTerminal, posTerminal, stepCost, keyLoss);
 
+	valueIteration(discount, epsilon, posTerminal, negTerminal, stepCost);
+
+	return 0;
+}
+
+// synchronous, in-place
+void valueIteration(double discount, double epsilon, double posTerminal, 
+					double negTerminal, double stepCost)
+{
+
+	clock_t start = clock();
+	int numIter = 0;
+
 	std::vector<double> utility;
 	std::vector<int> policy;
 
@@ -86,15 +103,6 @@ int main(int argc, char* argv[])
 		utility.push_back(0);
 		policy.push_back(N);
 	}
-
-	valueIteration(discount, epsilon, utility, policy);
-	printUtilitiesAndPolicy(utility, policy);
-	return 0;
-}
-
-// synchronous, in-place
-void valueIteration(double discount, double epsilon, std::vector<double> &utility, std::vector<int> &policy)
-{
 	double delta = 0;
 
 	do {
@@ -125,7 +133,17 @@ void valueIteration(double discount, double epsilon, std::vector<double> &utilit
 			utility[s] = uPS;
 		}
 
+		numIter++;
+
 	} while (delta >= epsilon * (1-discount) / discount);
+
+	clock_t end = clock();
+	double solTime = (double)(end - start) / CLOCKS_PER_SEC;
+
+	printResults(solTime, numIter, Iter::Value, stepCost,
+				 discount, epsilon, posTerminal, negTerminal,
+				 utility, policy);
+
 }
 
 /*void policyIteration(double discount, std::vector<double> &utility, std::vector<int> &policy)
@@ -196,7 +214,9 @@ bool extractPolicy(std::vector<double> &utilities, std::vector<int> &newPolicy, 
 }
 */
 
-void printUtilitiesAndPolicy(std::vector<double> utility, std::vector<int> policy)
+void printResults(double solTime, int numIter, Iter iter, double stepCost,
+				  double discount, double epsilon, double posTerminal, double negTerminal,
+				  std::vector<double> utility, std::vector<int> policy)
 {
 	
 	// formateString is a C-style format string to use with Java's printf-wannabe
@@ -221,7 +241,7 @@ void printUtilitiesAndPolicy(std::vector<double> utility, std::vector<int> polic
 	// The arguments that come after specify *what* string, *what* integer, etc.
 
 	for (int s = 58 ; s <= 64 ; s += 2)
-		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
+		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << std::fixed << utility[s] << " (" << action(policy[s]) << ")    "; 
 	std::cout << std::endl;
 	
 	for (int s = 59 ; s <= 63 ; s += 2)
@@ -278,6 +298,17 @@ void printUtilitiesAndPolicy(std::vector<double> utility, std::vector<int> polic
 	for (int s = 17 ; s <= 29 ; s += 2)
 		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << std::setprecision(PRINT_UTILITY_PRECISION) << utility[s] << " (" << action(policy[s]) << ")    "; 
 	std::cout << std::endl << std::endl;
+
+	std::cout << std::fixed << std::setprecision(1) << "Solution Technique: " << iterStrings[iter] << std::endl << std::endl
+		<< "Discount Factor = " << discount << std::endl
+		<< "Max Error in State Utilities = " << epsilon << std::endl
+		<< "Positive Reward = " << posTerminal << std::endl
+		<< "Negative Reward = " << negTerminal << std::endl
+		<< "Step Cost = " << stepCost << std::endl << std::endl
+		<< "# Iterations: " << numIter << std::endl
+		<< "Solution Time: " << std::setprecision(8) << solTime << " seconds" << std::endl;
+
+	return;
 }
     
 std::string action(int a)

@@ -14,6 +14,21 @@
 #define S 2
 #define W 3
 
+
+/*
+
+TODO
+
+fix return values and interactions with global arrays -- have things print and construct new utilities/policies
+	IN each iteration function, rather than working with globals at all (needs work on init, then -- send a pointer)
+
+fix print out format for correct double precision (2, currently 3?)
+fix prototype orders and parameters based on above
+
+add matrix library (armadillo library) and correct construction of new utilities in policy iteration
+
+*/
+
 double T[NUM_STATES][NUM_ACTIONS][NUM_STATES];
 double R[NUM_STATES];
 
@@ -23,6 +38,8 @@ void initMDP(double, double, double, double);
 void printUtilitiesAndPolicy(std::vector<double>, std::vector<int>);
 std::string action(int);
 void valueIteration(double, double, std::vector<double>& , std::vector<int>&);
+void policyIteration(double, std::vector<double>&, std::vector<int>&);
+bool extractPolicy(std::vector<double>, std::vector<int>, std::vector<int>);
 
 int main(int argc, char* argv[])
 {
@@ -110,6 +127,74 @@ void valueIteration(double discount, double epsilon, std::vector<double> &utilit
 
 	} while (delta >= epsilon * (1-discount) / discount);
 }
+
+/*void policyIteration(double discount, std::vector<double> &utility, std::vector<int> &policy)
+{
+
+	std::vector<int> currPolicy;
+
+	// set initial policy -- al random (all north)
+	for (int s = 0; s < NUM_STATES; s++) {
+		currPolicy.push_back(N);
+	}
+
+	bool policyChange = true;
+
+	while (policyChange) {
+		policyChange = false;
+
+		std::vector<double> allLCoeffs;
+		std::vector<double> currRCoeffs;
+
+		// iterate through every state
+		for (int s = 0; s < NUM_STATES; s++) {
+
+			currRCoeffs.push_back(R[s]);
+
+			std::vector<double> currLCoeffs;
+			for (int sP = 0; sP < NUM_STATES; sP++) {
+				currLCoeffs.push_back(T[s][policy[s]][sP] * utility[sP] * discount);
+			}
+
+			allLCoeffs.push_back(currLCoeffs);
+		}
+
+		std::vector<double> newUtilities; // = SOLVE MATRIX (currRCoeffs / allLCoeffs);
+
+		std::vector<int> newPolicy;
+
+		change = extractPolicy(newUtilities, newPolicy, &currPolicy);
+	}
+}
+
+bool extractPolicy(std::vector<double> &utilities, std::vector<int> &newPolicy, std::vector<int> &oldPolicy)
+{
+
+	policyChange = false;
+	// go through every state and fight the max weighted average of utilities given a move
+	for (int s = 0; s < NUM_STATES; s++) {
+		double aMaxVal = 0;
+
+		for (int a = 0; a < NUM_ACTIONS; a++) {
+			double aCurrVal = 0;
+
+			for (int sP = 0; sP < NUM_STATES; sP++) {
+				aCurrVal += T[s][a][sP] * utilities[sP];
+			}
+
+			if (aCurrVal > aMaxVal) {
+				newPolicy[s] = a;
+				aMaxVal = aCurrVal;
+			}
+		}
+
+		if (newPolicy[s] != oldPolicy[s])
+			policyChange = true;
+	}
+
+	return policyChange;
+}
+*/
 
 void printUtilitiesAndPolicy(std::vector<double> utility, std::vector<int> policy)
 {

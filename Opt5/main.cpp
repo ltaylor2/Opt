@@ -295,13 +295,14 @@ void printResults(double solTime, int numIter, Iter iter, double stepCost,
 	std::cout << std::endl << std::endl;
 
 	std::cout << std::fixed << std::setprecision(1) << "Solution Technique: " << iterStrings[iter] << std::endl << std::endl
-		<< "Discount Factor = " << discount << std::endl
-		<< "Max Error in State Utilities = " << epsilon << std::endl
-		<< "Positive Reward = " << posTerminal << std::endl
-		<< "Negative Reward = " << negTerminal << std::endl
-		<< "Step Cost = " << stepCost << std::endl << std::endl
-		<< "# Iterations: " << numIter << std::endl
-		<< "Solution Time: " << std::setprecision(8) << solTime << " seconds" << std::endl << "EXITING" << std::endl << std::endl << std::endl;
+			  << "Discount Factor = " << discount << std::endl
+			  << "Max Error in State Utilities = " << epsilon << std::endl
+			  << "Positive Reward = " << posTerminal << std::endl
+			  << "Negative Reward = " << negTerminal << std::endl
+			  << "Step Cost = " << stepCost << std::endl << std::endl
+			  << "# Iterations: " << numIter << std::endl
+			  << "Solution Time: " << std::setprecision(8) << solTime << " seconds" << std::endl
+			  << "EXITING" << std::endl << std::endl << std::endl;
 
 	return;
 }
@@ -330,7 +331,7 @@ void initMDP(double negTerminal, double posTerminal, double stepCost, double key
 		R[s] = stepCost;
 	}
 
-    // reset the rewards for terminal states
+	// reset the rewards for terminal states
  	R[44] = negTerminal;
  	R[45] = negTerminal;
 

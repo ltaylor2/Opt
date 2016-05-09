@@ -210,7 +210,7 @@ void policyIteration(double discount, double epsilon, double posTerminal,
 
 	std::vector<double> utility;
 	for (int s = 0; s < NUM_STATES; s++) {
-		utility.push_back(utilityVS[s]);
+		utility.push_back(utilityVD[s]);
 	}
 
 	clock_t end = clock();
@@ -222,7 +222,7 @@ void policyIteration(double discount, double epsilon, double posTerminal,
 
 }
 
-bool extractPolicy(VecDou &utilities, std::vector<int> &policy)
+bool extractPolicy(VecDoub &utilities, std::vector<int> &policy)
 {
 
 	bool policyChange = false;

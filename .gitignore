@@ -37,6 +37,23 @@ ehthumbs.db
 Thumbs.db
 
 Opt1A/*
+Opt1B/Taylor_Daniels-Koch_Opt1B/*
+Opt1B/large-problems/*
+Opt1B/small-problems/*
 Opt2/*
 Opt3/*
 Opt4/*
+
+mdp
+ssat
+
+*.txt
+*.png
+*.csv
+*.xlsx
+*.txt~
+*.R
+*.Rhistory
+*.py
+
+

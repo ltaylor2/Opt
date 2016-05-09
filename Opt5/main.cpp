@@ -45,7 +45,7 @@ void valueIteration(double, double, double, double, double);
 void policyIteration(double, double, double, double, double);
 
 std::string action(int);
-bool extractPolicy(std::vector<double> &, std::vector<int> &);
+bool extractPolicy(VecDoub &, std::vector<int> &);
 
 void printResults(double, int, Iter, double, 
 				  double, double, double, double,
@@ -334,8 +334,8 @@ void printResults(double solTime, int numIter, Iter iter, double stepCost,
 		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << utility[s] << " (" << action(policy[s]) << ")    "; 
 	std::cout << std::endl << std::endl;
 
-	std::cout << std::fixed << std::setprecision(1) << "Solution Technique: " << iterStrings[iter] << std::endl << std::endl
-			  << "Discount Factor = " << setprecision(6) << discount << std::endl
+	std::cout << "Solution Technique: " << iterStrings[iter] << std::endl << std::endl
+			  << "Discount Factor = " << discount << std::endl
 			  << "Max Error in State Utilities = " << epsilon << std::endl
 			  << "Positive Reward = " << posTerminal << std::endl
 			  << "Negative Reward = " << negTerminal << std::endl

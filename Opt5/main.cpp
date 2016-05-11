@@ -5,6 +5,8 @@
 #include <vector>
 #include <climits>
 #include <ctime>
+#include "nr3.h"
+#include "ludcmp.h"
 
 #define NUM_STATES 65
 #define NUM_ACTIONS 4
@@ -19,6 +21,8 @@
 /*
 
 TODO
+
+epsilon print out in policy iteration?
 
 fix return values and interactions with global arrays -- have things print and construct new utilities/policies
 	IN each iteration function, rather than working with globals at all (needs work on init, then -- send a pointer)
@@ -38,10 +42,10 @@ static const std::string iterStrings[] = {"Value Iteration", "Policy Iteration"}
 
 void initMDP(double, double, double, double);
 void valueIteration(double, double, double, double, double);
-void policyIteration(double);
+void policyIteration(double, double, double, double, double);
 
 std::string action(int);
-bool extractPolicy(std::vector<double>, std::vector<int>, std::vector<int>);
+bool extractPolicy(std::vector<double> &, std::vector<int> &);
 
 void printResults(double, int, Iter, double, double, double, double, double, std::vector<double>, std::vector<int>);
 
@@ -83,7 +87,10 @@ int main(int argc, char* argv[])
 
 	initMDP(negTerminal, posTerminal, stepCost, keyLoss);
 
-	valueIteration(discount, epsilon, posTerminal, negTerminal, stepCost);
+	if (iter == Iter::Value)
+		valueIteration(discount, epsilon, posTerminal, negTerminal, stepCost);
+	else if (iter == Iter::Policy)
+		policyIteration(discount, epsilon, posTerminal, negTerminal, stepCost);
 
 	return 0;
 }
@@ -147,52 +154,101 @@ void valueIteration(double discount, double epsilon, double posTerminal,
 	return;
 }
 
-/*void policyIteration(double discount, std::vector<double> &utility, std::vector<int> &policy)
+void policyIteration(double discount, double epsilon, double posTerminal, 
+					double negTerminal, double stepCost)
 {
 
-	std::vector<int> currPolicy;
+	clock_t start = clock();
+	int numIter = 0;
 
-	// set initial policy -- al random (all north)
+	//Initialize policy and utility vectors
+	//In order to solve the systems of equations, we use the Numerical Recipes package
+	//which asks for a matrix and two vectors of "Doubs", a data structure unique to Numerical Recipes
+	std::vector<int> policy;
+	VecDoub utilityVD(NUM_STATES);
+
+	// set inital random (all north)
 	for (int s = 0; s < NUM_STATES; s++) {
-		currPolicy.push_back(N);
+		policy.push_back(N);
+		utilityVD[s] = N;
 	}
+
+	std::vector<double> utility;
+	for(int s=0; s < NUM_STATES; s++){
+		utility.push_back(s);
+	}
+
+
+	for(int s=0; s < NUM_STATES; s++){
+		utility[s] = utilityVD[s];
+	}
+
 
 	bool policyChange = true;
 
-	while (policyChange) {
+	while(policyChange) {
 		policyChange = false;
 
-		std::vector<double> allLCoeffs;
-		std::vector<double> currRCoeffs;
+		
+		//Initialize matrix of Left side of the system of equations
+		MatDoub allLCoeffs(NUM_STATES,NUM_STATES);
+
+		//Initialize the right side of the equation (b part of Ax=b)
+		VecDoub currRCoeffs(NUM_STATES);
 
 		// iterate through every state
 		for (int s = 0; s < NUM_STATES; s++) {
 
-			currRCoeffs.push_back(R[s]);
+			currRCoeffs[s] = R[s];
 
 			std::vector<double> currLCoeffs;
 			for (int sP = 0; sP < NUM_STATES; sP++) {
-				currLCoeffs.push_back(T[s][policy[s]][sP] * utility[sP] * discount);
-			}
+				allLCoeffs[s][sP] = -1*T[s][policy[s]][sP] * discount;
 
-			allLCoeffs.push_back(currLCoeffs);
+				if(s == sP){
+					allLCoeffs[s][sP] ++;
+				}
+			}
+			
 		}
 
-		std::vector<double> newUtilities; // = SOLVE MATRIX (currRCoeffs / allLCoeffs);
+		//Performs Lower Upper Decomposition to simplify matrix
+		//(Factors the matrix as a product of lower and upper triangular matrices)
+		LUdcmp alu(allLCoeffs);
 
-		std::vector<int> newPolicy;
+		//Solves the system of equations to find the utility of each state
+		alu.solve(currRCoeffs,utilityVD);
 
-		change = extractPolicy(newUtilities, newPolicy, &currPolicy);
+		//Give utility the values of utilityVD
+		for(int s=0; s < NUM_STATES; s++){
+			utility[s] = utilityVD[s];
+		}
+
+
+		// UTILITY + SOLUTION TO MATRIX CALCULATION W/ COEFFS
+		policyChange = extractPolicy(utility, policy);
+		numIter++;
 	}
+
+	clock_t end = clock();
+	double solTime = (double)(end - start)/ CLOCKS_PER_SEC;
+
+	printResults(solTime, numIter,  Iter::Policy, stepCost,
+			 	 discount, epsilon, posTerminal, negTerminal,
+				 utility, policy);
+
 }
 
-bool extractPolicy(std::vector<double> &utilities, std::vector<int> &newPolicy, std::vector<int> &oldPolicy)
+bool extractPolicy(std::vector<double> &utilities, std::vector<int> &policy)
 {
 
-	policyChange = false;
+	bool policyChange = false;
+
+	std::vector<int> newPolicy;
 	// go through every state and fight the max weighted average of utilities given a move
 	for (int s = 0; s < NUM_STATES; s++) {
-		double aMaxVal = 0;
+		int newAction = N;
+		double aMaxVal = INT_MIN;
 
 		for (int a = 0; a < NUM_ACTIONS; a++) {
 			double aCurrVal = 0;
@@ -202,18 +258,19 @@ bool extractPolicy(std::vector<double> &utilities, std::vector<int> &newPolicy, 
 			}
 
 			if (aCurrVal > aMaxVal) {
-				newPolicy[s] = a;
+				newAction = a;
 				aMaxVal = aCurrVal;
 			}
 		}
 
-		if (newPolicy[s] != oldPolicy[s])
+		if (newAction != policy[s])
 			policyChange = true;
+
+		policy[s] = newAction;
 	}
 
 	return policyChange;
 }
-*/
 
 void printResults(double solTime, int numIter, Iter iter, double stepCost,
 				  double discount, double epsilon, double posTerminal, double negTerminal,
@@ -295,7 +352,7 @@ void printResults(double solTime, int numIter, Iter iter, double stepCost,
 	std::cout << std::endl << std::endl;
 
 	std::cout << std::fixed << std::setprecision(1) << "Solution Technique: " << iterStrings[iter] << std::endl << std::endl
-			  << "Discount Factor = " << discount << std::endl
+			  << "Discount Factor = " << setprecision(6) << discount << std::endl
 			  << "Max Error in State Utilities = " << epsilon << std::endl
 			  << "Positive Reward = " << posTerminal << std::endl
 			  << "Negative Reward = " << negTerminal << std::endl

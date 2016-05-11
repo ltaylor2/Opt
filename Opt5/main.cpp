@@ -19,19 +19,14 @@
 
 
 /*
-
 TODO
 
-epsilon print out in policy iteration?
-
-fix return values and interactions with global arrays -- have things print and construct new utilities/policies
-	IN each iteration function, rather than working with globals at all (needs work on init, then -- send a pointer)
-
-fix print out format for correct double precision (2, currently 3?)
-fix prototype orders and parameters based on above
-
-add matrix library (armadillo library) and correct construction of new utilities in policy iteration
-
+document
+organize
+readme
+check spacing
+package
+hand in!
 */
 
 double T[NUM_STATES][NUM_ACTIONS][NUM_STATES];

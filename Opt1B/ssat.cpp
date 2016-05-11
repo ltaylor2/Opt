@@ -273,13 +273,13 @@ double solve(SolutionType directions,
 
 		// try to find any pure variables
 		for (int l = 0; l < (signed int)varsByClause.size(); l++) {
-		    if (variables->at(l) != -1 || assignments->at(l) != 0)	// only looking at unassigned choice variables
+		    if (variables->at(l) != -1 || assignments->at(l) != 0)	// only looking at unassigned choice variables 
 				continue;
 
 		    for (unsigned int c = 1; c < varsByClause[l].size(); c++) {
 				pureVar = l;
 
-				// Variable is not pure
+				// Variable is not pure CONFUSED
 				if (varsByClause[l].size() < 1 || !((varsByClause[l][c-1] < 0 && varsByClause[l][c] < 0) || (varsByClause[l][c-1] > 0 && varsByClause[l][c] > 0))) {
 				    pureVar = -1;
 				    break;

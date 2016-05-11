@@ -1,3 +1,19 @@
+//main.cpp.
+//      Assignment5.c++-Source code for Planning as Satisfiability.
+//FUNCTIONAL DESCRIPTION
+//      This program in C++ fulfills the requirements of Assignment 5 in
+//      CSCI3460 Spring 2016
+//
+//      The program initializes a markov decision process test problem
+//		given input parameters and solves that problem with either Policy Iteration or
+//		Value Iteration techiques. Upon finding a solution, the program will output the 
+//		calculated utility for each state and the current optimal policy.
+// Notice
+//      Copyright (C) May 1, 2016 to May 11, 2016
+//      Liam Taylor and Henry Daniels-Koch All Rights Reserved.
+//
+
+
 #include <iostream>
 #include <cmath>
 #include <cstring>
@@ -18,41 +34,39 @@
 #define W 3
 
 
-/*
-
-TODO
-
-epsilon print out in policy iteration?
-
-fix return values and interactions with global arrays -- have things print and construct new utilities/policies
-	IN each iteration function, rather than working with globals at all (needs work on init, then -- send a pointer)
-
-fix print out format for correct double precision (2, currently 3?)
-fix prototype orders and parameters based on above
-
-add matrix library (armadillo library) and correct construction of new utilities in policy iteration
-
-*/
-
+//Holds the transition and reward functions
 double T[NUM_STATES][NUM_ACTIONS][NUM_STATES];
 double R[NUM_STATES];
 
+//Specifies which solution type the user would like
 enum Iter {Value, Policy};
 static const std::string iterStrings[] = {"Value Iteration", "Policy Iteration"};
 
+//Sets up the grid world by filling the reward and transition function arrays for each state in the grid world
 void initMDP(double, double, double, double);
+
+// Executes synchonous, in-place value iteration by calculating new utilities for all of the states on every iteration
 void valueIteration(double, double, double, double, double);
+
+// Executes policy iteration by starting with a random policy and iteratively improving it
 void policyIteration(double, double, double, double, double);
 
+// Translates numerical values into directional strings (N,E,S,W)
 std::string action(int);
-bool extractPolicy(std::vector<double> &, std::vector<int> &);
 
-void printResults(double, int, Iter, double, double, double, double, double, std::vector<double>, std::vector<int>);
+// Determines the optimal policy given the current utility
+bool extractPolicy(VecDoub &, std::vector<int> &);
 
+//Prints the parameters of solution
+void printResults(double, int, Iter, double, 
+				  double, double, double, double,
+				  std::vector<double>, std::vector<int>);
+
+//main function initializes MDP by filling the reward and transition functions and executing value iteration or policy iteration
 int main(int argc, char* argv[])
 {
 
-	// help/cmd errors
+	// User did not use the correct parameters
 	if (argc != 8) {
 		std::cout << "Incorrect Parameters. Exiting." << std::endl
 					<< "1: Discount Rate (Double)" << std::endl
@@ -65,7 +79,7 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	// reading in args for problem parameters
+	// Reads in arguments for problem
 	double discount = atof(argv[1]);
 	double epsilon = atof(argv[2]);
 	double keyLoss = atof(argv[3]);
@@ -75,6 +89,7 @@ int main(int argc, char* argv[])
 
 	std::string iterArg(argv[7]);
 
+	//Determines which solution the user asked for
 	Iter iter;
 	if (iterArg.compare("v") == 0) 
 		iter = Iter::Value;
@@ -85,8 +100,10 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
+	//Initializes the MDP by filling the reward function and transition function
 	initMDP(negTerminal, posTerminal, stepCost, keyLoss);
 
+	//Solves MDP with either value iteration of policy iteration
 	if (iter == Iter::Value)
 		valueIteration(discount, epsilon, posTerminal, negTerminal, stepCost);
 	else if (iter == Iter::Policy)
@@ -95,25 +112,39 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-// synchronous, in-place
+// Executes synchonous, in-place value iteration by calculating new utilities for all of the states on every iteration
+// @param discount -- The factor that decreases reward impact across steps 
+// @param epsilon -- The error factor that determines the stop condition range
+// @param posTerminal -- The positive terminal reward given for a terminal state requiring a key item
+// @param negTerminal -- The negative terminal reward given for the two negative states near the key retrieval state
+// @param stepCost -- The cost of taking each action (influencing the rewards)
 void valueIteration(double discount, double epsilon, double posTerminal, 
 					double negTerminal, double stepCost)
 {
 
+	//Starts clock
 	clock_t start = clock();
 	int numIter = 0;
 
+	//Initializes the policy and utility vectors for each state
 	std::vector<double> utility;
 	std::vector<int> policy;
 
+	// Fills policy and utility vectors
 	for (int s = 0; s < NUM_STATES; s++) {
 		utility.push_back(0);
 		policy.push_back(N);
 	}
+
+	// Difference between the utility of the next state and the previous state
 	double delta = 0;
 
+	// Iterates until detla is below a certain threshold
 	do {
+
 		delta = 0;
+
+		//Iterates over each state to find the action that gives the maximum weighted average of utilities
 		for (int s = 0; s < NUM_STATES; s++) {
 
 			double uPS = 0;
@@ -126,6 +157,7 @@ void valueIteration(double discount, double epsilon, double posTerminal,
 					currSum += T[s][a][sP] * utility[sP];
 				}
 
+				// Sum of weighted utilities is the largest so far
 				if (currSum > aMaxVal) {
 					policy[s] = a;
 					aMaxVal = currSum;
@@ -134,19 +166,23 @@ void valueIteration(double discount, double epsilon, double posTerminal,
 
 			uPS = R[s] + discount * aMaxVal;
 
+			// The difference between utilities of states is greater than current delta
 			if (std::abs(uPS - utility[s]) > delta)
 				delta = std::abs(uPS - utility[s]);
 
+			// Update new utility
 			utility[s] = uPS;
 		}
 
 		numIter++;
 
-	} while (delta >= epsilon * (1-discount) / discount);
+	} while (delta >= epsilon * (1-discount) / discount);	// exit given a small enough max change across all utilities (with error)
 
+	// Stop clock
 	clock_t end = clock();
 	double solTime = (double)(end - start) / CLOCKS_PER_SEC;
 
+	//Print results
 	printResults(solTime, numIter, Iter::Value, stepCost,
 				 discount, epsilon, posTerminal, negTerminal,
 				 utility, policy);
@@ -154,10 +190,15 @@ void valueIteration(double discount, double epsilon, double posTerminal,
 	return;
 }
 
+// Executes policy iteration by starting with a random policy and iteratively improving it
+// @param posTerminal -- The positive terminal reward given for a terminal state requiring a key item
+// @param negTerminal -- The negative terminal reward given for the two negative states near the key retrieval state
+// @param stepCost -- The cost of taking each action (influencing the rewards)
 void policyIteration(double discount, double epsilon, double posTerminal, 
 					double negTerminal, double stepCost)
 {
 
+	//Start clock
 	clock_t start = clock();
 	int numIter = 0;
 
@@ -167,86 +208,92 @@ void policyIteration(double discount, double epsilon, double posTerminal,
 	std::vector<int> policy;
 	VecDoub utilityVD(NUM_STATES);
 
-	// set inital random (all north)
+	// Initialize policy "randomly" to North and utilities to 0
 	for (int s = 0; s < NUM_STATES; s++) {
 		policy.push_back(N);
-		utilityVD[s] = N;
+		utilityVD[s] = 0;
 	}
 
-	std::vector<double> utility;
-	for(int s=0; s < NUM_STATES; s++){
-		utility.push_back(s);
-	}
-
-
-	for(int s=0; s < NUM_STATES; s++){
-		utility[s] = utilityVD[s];
-	}
-
-
+	// Determines whether policy was changed
 	bool policyChange = true;
 
+	// Execute until the policy does not change
 	while(policyChange) {
+
 		policyChange = false;
 
-		
-		//Initialize matrix of Left side of the system of equations
+
+		//Initialize the left side of the equation (A part of Ax=b)
 		MatDoub allLCoeffs(NUM_STATES,NUM_STATES);
 
 		//Initialize the right side of the equation (b part of Ax=b)
 		VecDoub currRCoeffs(NUM_STATES);
 
-		// iterate through every state
+		// Constructs a system of equations by find the utility of each state
 		for (int s = 0; s < NUM_STATES; s++) {
 
+			// Fills b vector with rewards
 			currRCoeffs[s] = R[s];
 
-			std::vector<double> currLCoeffs;
 			for (int sP = 0; sP < NUM_STATES; sP++) {
-				allLCoeffs[s][sP] = -1*T[s][policy[s]][sP] * discount;
 
-				if(s == sP){
-					allLCoeffs[s][sP] ++;
-				}
+				// Fills A matrix with discounted transition probabilities
+				allLCoeffs[s][sP] = -1 * T[s][policy[s]][sP] * discount;
+
+				// Add 1 on the matrix's diagonal
+				if(s == sP)
+					allLCoeffs[s][sP]++;
 			}
 			
 		}
 
-		//Performs Lower Upper Decomposition to simplify matrix
+		//Perform Lower, Uppeer Decomposition
 		//(Factors the matrix as a product of lower and upper triangular matrices)
 		LUdcmp alu(allLCoeffs);
 
-		//Solves the system of equations to find the utility of each state
+		//Solves system of equations
 		alu.solve(currRCoeffs,utilityVD);
 
-		//Give utility the values of utilityVD
-		for(int s=0; s < NUM_STATES; s++){
-			utility[s] = utilityVD[s];
-		}
-
-
-		// UTILITY + SOLUTION TO MATRIX CALCULATION W/ COEFFS
-		policyChange = extractPolicy(utility, policy);
+		// Extracts best policy for utilities at each state
+		policyChange = extractPolicy(utilityVD, policy);
 		numIter++;
 	}
 
+	// Convert utility VecDoub to vector of doubles
+	std::vector<double> utility;
+
+	for (int s = 0; s < NUM_STATES; s++) {
+		utility.push_back(utilityVD[s]);
+	}
+
+	//Stop clock
 	clock_t end = clock();
 	double solTime = (double)(end - start)/ CLOCKS_PER_SEC;
 
+	//Print results
 	printResults(solTime, numIter,  Iter::Policy, stepCost,
 			 	 discount, epsilon, posTerminal, negTerminal,
 				 utility, policy);
 
 }
 
-bool extractPolicy(std::vector<double> &utilities, std::vector<int> &policy)
+// Determines the optimal policy given the current utility
+// Returns a boolean that indicates whether the policy was improved
+// @param &utilities -- pointer to the utilitiy of each state
+// @param &policy -- pointer to the current policy of each state
+bool extractPolicy(VecDoub &utilities, std::vector<int> &policy)
 {
 
+	//Determines whether the policy was changed
 	bool policyChange = false;
 
+	//Initializes vector of new policies 
 	std::vector<int> newPolicy;
-	// go through every state and fight the max weighted average of utilities given a move
-	for (int s = 0; s < NUM_STATES; s++) {
+
+	//Iterates through every state and find the max weighted average of utilities given a move
+	for (int s = 0; s < NUM_STATES; s++) 
+
+	{
 		int newAction = N;
 		double aMaxVal = INT_MIN;
 
@@ -254,38 +301,45 @@ bool extractPolicy(std::vector<double> &utilities, std::vector<int> &policy)
 			double aCurrVal = 0;
 
 			for (int sP = 0; sP < NUM_STATES; sP++) {
+
+				//Sum weighted utility of all states
 				aCurrVal += T[s][a][sP] * utilities[sP];
 			}
 
+			// Weighted sum of utility is higher than current sum
 			if (aCurrVal > aMaxVal) {
 				newAction = a;
 				aMaxVal = aCurrVal;
 			}
 		}
 
+		//New optimal action is different from the current policy
 		if (newAction != policy[s])
 			policyChange = true;
 
+		// Set new policy to be used the next iteration
 		policy[s] = newAction;
 	}
 
 	return policyChange;
 }
 
+// Prints all the results of the solution
+// @param solTime -- The time it took to run the solution
+// @param numIter -- The number of iterations the solution took to get to the optimal state
+// @param stepCost -- The cost of taking each action (influencing the rewards)
+// @param discount -- The factor that decreases reward impact across steps 
+// @param epsilon -- The error factor that determines the stop condition range
+// @param posTerminal -- The positive terminal reward given for a terminal state requiring a key item
+// @param negTerminal -- The negative terminal reward given for the two negative states near the key retrieval state
+// @param &utilities -- pointer to the utilitiy of each state
+// @param &policy -- pointer to the current policy of each state
 void printResults(double solTime, int numIter, Iter iter, double stepCost,
 				  double discount, double epsilon, double posTerminal, double negTerminal,
 				  std::vector<double> utility, std::vector<int> policy)
 {
 	
-	// formateString is a C-style format string to use with Java's printf-wannabe
-	// method; the format string specifies what the output should look like, including
-	// format specifications for values, and the actual items to be printed are
-	// the arguments to printf that come after the format string.  in the following,
-	// if PRINT_UTILITY_PRECISION is 2, the format string would be:
-	//
-	//    "%s%2d%s %.2f %s    "
-	//
-	// This means that the output will be:
+	// 	  Printing format
 	//    a string,
 	//    an integer that should be printed in 2 spaces, 
 	//    a string,
@@ -296,10 +350,10 @@ void printResults(double solTime, int numIter, Iter iter, double stepCost,
 	//    a string, and
 	//    4 spaces.
 	//
-	// The arguments that come after specify *what* string, *what* integer, etc.
 
 	std::cout << std::endl << std::endl << std::fixed << std::setprecision(PRINT_UTILITY_PRECISION);
 
+	//Prints policy and utilities of each solution
 	for (int s = 58 ; s <= 64 ; s += 2)
 		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << utility[s] << " (" << action(policy[s]) << ")    "; 
 	std::cout << std::endl;
@@ -351,8 +405,10 @@ void printResults(double solTime, int numIter, Iter iter, double stepCost,
 		std::cout << "(" << std::setw(2) << s << std::setw(1) << ") " << std::setw(5) << utility[s] << " (" << action(policy[s]) << ")    "; 
 	std::cout << std::endl << std::endl;
 
-	std::cout << std::fixed << std::setprecision(1) << "Solution Technique: " << iterStrings[iter] << std::endl << std::endl
-			  << "Discount Factor = " << setprecision(6) << discount << std::endl
+
+	//Prints all parameters of solution
+	std::cout << "Solution Technique: " << iterStrings[iter] << std::endl << std::endl
+			  << "Discount Factor = " << discount << std::endl
 			  << "Max Error in State Utilities = " << epsilon << std::endl
 			  << "Positive Reward = " << posTerminal << std::endl
 			  << "Negative Reward = " << negTerminal << std::endl
@@ -363,7 +419,11 @@ void printResults(double solTime, int numIter, Iter iter, double stepCost,
 
 	return;
 }
-    
+
+
+// Translates numerical values into directional strings (N,E,S,W)
+// Returns a directional string string
+// @param a -- The numerical direction 0-3
 std::string action(int a)
 {
 	switch (a) {
@@ -380,6 +440,12 @@ std::string action(int a)
 	}
 }
 
+//
+// Sets up the grid world by filling the reward and transition function arrays for each state in the grid world
+// @param posTerminal -- The positive terminal reward given for a terminal state requiring a key item
+// @param negTerminal -- The negative terminal reward given for the two negative states near the key retrieval state
+// @param stepCost -- The cost of taking each action (influencing the rewards)
+// @param keyLoss -- the probability of losing the key in the key-loss square
 void initMDP(double negTerminal, double posTerminal, double stepCost, double keyLoss)
 {
 

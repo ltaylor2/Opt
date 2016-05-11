@@ -12,7 +12,8 @@ Value Iteration techiques. Upon finding a solution, the program will output the
 calculated utility for each state and the current optimal policy, in addition to
 run-time and iteration information as well as a record of parameter settings.
 
-IMPORTANT NOTE: The full contents of nr3.h and ludcmp.h are taken from the HENRY. LT and HDK did not alter the contents of these files in any way.
+IMPORTANT NOTES: The full contents of nr3.h and ludcmp.h are taken from the HENRY. LT and HDK did not alter the contents of these files in any way.
+		 The printResults and initMDP functions were adapted from java code by SM
 
 This program can be compiled with the command:
 g++ -std=c++11 main.cpp -o mdp

@@ -409,7 +409,7 @@ void printResults(double solTime, int numIter, Iter iter, double stepCost,
 	//Prints all parameters of solution
 	std::cout << "Solution Technique: " << iterStrings[iter] << std::endl << std::endl
 			  << "Discount Factor = " << discount << std::endl
-			  << "Max Error in State Utilities = " << epsilon << std::endl
+			  << "Max Error in State Utilities = " << std::setprecision(8) << epsilon << std::setprecision(2) << std::endl
 			  << "Positive Reward = " << posTerminal << std::endl
 			  << "Negative Reward = " << negTerminal << std::endl
 			  << "Step Cost = " << stepCost << std::endl << std::endl

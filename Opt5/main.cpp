@@ -21,6 +21,7 @@
 #include <vector>
 #include <climits>
 #include <ctime>
+#include <fstream>
 #include "nr3.h"
 #include "ludcmp.h"
 
@@ -28,6 +29,7 @@
 #define NUM_ACTIONS 4
 #define PRINT_UTILITY_PRECISION 2
 
+// available actions
 #define N 0
 #define E 1
 #define S 2
@@ -46,10 +48,10 @@ static const std::string iterStrings[] = {"Value Iteration", "Policy Iteration"}
 void initMDP(double, double, double, double);
 
 // Executes synchonous, in-place value iteration by calculating new utilities for all of the states on every iteration
-void valueIteration(double, double, double, double, double);
+std::string valueIteration(double, double, double, double, double, double);
 
 // Executes policy iteration by starting with a random policy and iteratively improving it
-void policyIteration(double, double, double, double, double);
+std::string policyIteration(double, double, double, double, double, double);
 
 // Translates numerical values into directional strings (N,E,S,W)
 std::string action(int);
@@ -65,49 +67,22 @@ void printResults(double, int, Iter, double,
 //main function initializes MDP by filling the reward and transition functions and executing value iteration or policy iteration
 int main(int argc, char* argv[])
 {
+	ofstream file;
+	file.open("ex_1_2.csv");
 
-	// User did not use the correct parameters
-	if (argc != 8) {
-		std::cout << "Incorrect Parameters. Exiting." << std::endl
-					<< "1: Discount Rate (Double)" << std::endl
-					<< "2: Max error state (Double)" << std::endl
-					<< "3: Key loss probability (Double)" << std::endl
-					<< "4: Positive terminal reward (Double)" << std::endl
-					<< "5: Negative terminal reward (Double)" << std::endl
-					<< "6: Step cost (double)" << std::endl
-					<< "7: Iteration type? (v or p)" << std::endl;
-		return -1;
+	// column header
+	file << "Type," << "Iterations," << "Time," << "OptIterations,"
+		 << "Discount," << "Epsilon," << "SCost," << "NegTerm," << "PosTerm," 
+		 << "KeyLoss" << std::endl;
+
+	initMDP(-1, 1, -0.04, 0.5);
+
+	for (int i = 0; i < 100; i++) {
+		file << valueIteration(0.999999, 0.000001, 1, -1, -0.04, 0.5);
+		file << policyIteration(0.999999, 0.000001, 1, -1, -0.04, 0.5);
 	}
 
-	// Reads in arguments for problem
-	double discount = atof(argv[1]);
-	double epsilon = atof(argv[2]);
-	double keyLoss = atof(argv[3]);
-	double posTerminal = atof(argv[4]);
-	double negTerminal = atof(argv[5]);
-	double stepCost = atof(argv[6]);
-
-	std::string iterArg(argv[7]);
-
-	//Determines which solution the user asked for
-	Iter iter;
-	if (iterArg.compare("v") == 0) 
-		iter = Iter::Value;
-	else if (iterArg.compare("p") == 0)
-		iter = Iter::Policy;
-	else {
-		std::cout << "Incorrect iteration type specified (not v or p)" << std::endl;
-		return 1;
-	}
-
-	//Initializes the MDP by filling the reward function and transition function
-	initMDP(negTerminal, posTerminal, stepCost, keyLoss);
-
-	//Solves MDP with either value iteration of policy iteration
-	if (iter == Iter::Value)
-		valueIteration(discount, epsilon, posTerminal, negTerminal, stepCost);
-	else if (iter == Iter::Policy)
-		policyIteration(discount, epsilon, posTerminal, negTerminal, stepCost);
+	file.close();
 
 	return 0;
 }
@@ -118,11 +93,13 @@ int main(int argc, char* argv[])
 // @param posTerminal -- The positive terminal reward given for a terminal state requiring a key item
 // @param negTerminal -- The negative terminal reward given for the two negative states near the key retrieval state
 // @param stepCost -- The cost of taking each action (influencing the rewards)
-void valueIteration(double discount, double epsilon, double posTerminal, 
-					double negTerminal, double stepCost)
+std::string valueIteration(double discount, double epsilon, double posTerminal, 
+					double negTerminal, double stepCost, double keyLoss)
 {
 
 	//Starts clock
+
+	int lastChangeIter = 0;
 	clock_t start = clock();
 	int numIter = 0;
 
@@ -149,6 +126,7 @@ void valueIteration(double discount, double epsilon, double posTerminal,
 
 			double uPS = 0;
 			double aMaxVal = INT_MIN;
+			int prevA = policy[s];
 
 			for (int a = 0; a < NUM_ACTIONS; a++) {
 
@@ -162,7 +140,11 @@ void valueIteration(double discount, double epsilon, double posTerminal,
 					policy[s] = a;
 					aMaxVal = currSum;
 				}
+
 			}
+
+			if (prevA != policy[s])
+				lastChangeIter = numIter + 1;
 
 			uPS = R[s] + discount * aMaxVal;
 
@@ -187,15 +169,20 @@ void valueIteration(double discount, double epsilon, double posTerminal,
 				 discount, epsilon, posTerminal, negTerminal,
 				 utility, policy);
 
-	return;
+	stringstream retSS;
+	retSS <<  "value," << numIter << "," << solTime << "," << lastChangeIter << ","
+		   << discount << "," << epsilon << "," << stepCost << "," << negTerminal
+		   << "," << posTerminal << "," << keyLoss << "\n";
+	return retSS.str();
+
 }
 
 // Executes policy iteration by starting with a random policy and iteratively improving it
 // @param posTerminal -- The positive terminal reward given for a terminal state requiring a key item
 // @param negTerminal -- The negative terminal reward given for the two negative states near the key retrieval state
 // @param stepCost -- The cost of taking each action (influencing the rewards)
-void policyIteration(double discount, double epsilon, double posTerminal, 
-					double negTerminal, double stepCost)
+std::string policyIteration(double discount, double epsilon, double posTerminal, 
+					double negTerminal, double stepCost, double keyLoss)
 {
 
 	//Start clock
@@ -218,7 +205,7 @@ void policyIteration(double discount, double epsilon, double posTerminal,
 	bool policyChange = true;
 
 	// Execute until the policy does not change
-	while(policyChange) {
+	while (policyChange) {
 
 		policyChange = false;
 
@@ -274,6 +261,13 @@ void policyIteration(double discount, double epsilon, double posTerminal,
 	printResults(solTime, numIter,  Iter::Policy, stepCost,
 			 	 discount, epsilon, posTerminal, negTerminal,
 				 utility, policy);
+
+	stringstream retSS;
+	retSS <<  "policy," << numIter << "," << solTime << "," << numIter << ","
+		   << discount << "," << epsilon << "," << stepCost << "," << negTerminal
+		   << "," << posTerminal << "," << keyLoss << "\n";
+	return retSS.str();
+
 
 }
 

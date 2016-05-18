@@ -67,95 +67,123 @@ void printResults(double, int, Iter, double,
 //main function initializes MDP by filling the reward and transition functions and executing value iteration or policy iteration
 int main(int argc, char* argv[])
 {
-	ofstream file;
-	file.open("ex_1_2.csv");
+	ofstream disc;
+	disc.open("discount.csv");
+
+	ofstream step;
+	step.open("step.csv");
+
+	ofstream neg;
+	neg.open("neg.csv");
+
+	ofstream pos;
+	pos.open("pos.csv");
+
+	ofstream key;
+	key.open("key.csv");
 
 	// column header
-	file << "Type," << "Iterations," << "Time," << "OptIterations,"
+	disc << "Type," << "Iterations," << "Time," << "OptIterations,"
+		 << "Discount," << "Epsilon," << "SCost," << "NegTerm," << "PosTerm," 
+		 << "KeyLoss" << std::endl;
+
+	step << "Type," << "Iterations," << "Time," << "OptIterations,"
+		 << "Discount," << "Epsilon," << "SCost," << "NegTerm," << "PosTerm," 
+		 << "KeyLoss" << std::endl;
+
+	neg << "Type," << "Iterations," << "Time," << "OptIterations,"
+		 << "Discount," << "Epsilon," << "SCost," << "NegTerm," << "PosTerm," 
+		 << "KeyLoss" << std::endl;
+
+	pos << "Type," << "Iterations," << "Time," << "OptIterations,"
+		 << "Discount," << "Epsilon," << "SCost," << "NegTerm," << "PosTerm," 
+		 << "KeyLoss" << std::endl;
+
+	key << "Type," << "Iterations," << "Time," << "OptIterations,"
 		 << "Discount," << "Epsilon," << "SCost," << "NegTerm," << "PosTerm," 
 		 << "KeyLoss" << std::endl;
 
 	initMDP(-1, 1, -0.04, 0.5);
 
 	// Experiment 4 Do Each test 10 times
-	/*for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < 10; i++) {
 
 		//Try different discount value from 0.16 to 1 (can't go lower than 0.16)
 		for (double j = 0.16; j < 1; j+= 0.001) {
-			file << valueIteration(j, 0.000001, 1, -1, -0.04, 0.5);
+			disc << valueIteration(j, 0.000001, 1, -1, -0.04, 0.5);
 			//file << policyIteration(j, 0.000001, 1, -1, -0.04, 0.5);
 		}
-
+		std::cout << "disc" << std::endl;
 		//Try different step costs
 		for (double s = -0.001; s > -1.001; s-= 0.001) {
-			std::cout << s << std::endl;
-			file << valueIteration(0.999999, 0.000001, 1, -1, s, 0.5);
+			step << valueIteration(0.999999, 0.000001, 1, -1, s, 0.5);
 			//file << policyIteration(0.999999, 0.000001, 1, -1, s, 0.5);
 		}
-
+		std::cout << "step" << std::endl;
 		//Try different negative rewards
 		for (double n = -0.01; n > -10; n-= 0.01){
-			std::cout << n << std::endl;
-			file << valueIteration(0.999999, 0.000001, 1, n, -0.04, 0.5);
+			neg << valueIteration(0.999999, 0.000001, 1, n, -0.04, 0.5);
 			//file << policyIteration(0.999999, 0.000001, 1, n, -0.04, 0.5);
 		}
-
+		std::cout << "Neg" << std::endl;
 		//Try different positive rewards
 		for (double p = 0.01; p < 10; p+= 0.01){
-			std::cout << p << std::endl;
-			file << valueIteration(0.999999, 0.000001, p, -1, -0.04, 0.5);
+			pos << valueIteration(0.999999, 0.000001, p, -1, -0.04, 0.5);
 			//file << policyIteration(0.999999, 0.000001, p, -1, -0.04, 0.5);
 		}
-
+		std::cout << "Pos" << std::endl;
 		//Try different key loss probabilities
 		for (double k = 0.01; k < 1; k += 0.01){
-			std::cout << k << std::endl;
-			file << valueIteration(0.999999, 0.000001, 1, -1, -0.04, k);
+			key << valueIteration(0.999999, 0.000001, 1, -1, -0.04, k);
 			//file << policyIteration(0.999999, 0.000001, 1, -1, -0.04, k);
 		}
-
-	}*/
-
-	// Experiment 5 Do Each test 10 times (make sure to print out policies)
-	for (int i = 0; i < 1; i++) {
-
-		//Try different discount value from 0.16 to 1 (can't go lower than 0.16)
-		for (double j = 0.2; j < 1.; j+= 0.2) {
-			file << valueIteration(j, 0.000001, 1, -1, -0.04, 0.5);
-			//file << policyIteration(j, 0.000001, 1, -1, -0.04, 0.5);
-		}
-
-		//Try different step costs
-		for (double s = -0.001; s > -1.001; s-= 0.25) {
-			std::cout << s << std::endl;
-			file << valueIteration(0.999999, 0.000001, 1, -1, s, 0.5);
-			//file << policyIteration(0.999999, 0.000001, 1, -1, s, 0.5);
-		}
-
-		//Try different negative rewards
-		for (double n = -0.01; n > -10; n-= 2.5){
-			std::cout << n << std::endl;
-			file << valueIteration(0.999999, 0.000001, 1, n, -0.04, 0.5);
-			//file << policyIteration(0.999999, 0.000001, 1, n, -0.04, 0.5);
-		}
-
-		//Try different positive rewards
-		for (double p = 0.01; p < 10; p+= 2.5){
-			std::cout << p << std::endl;
-			file << valueIteration(0.999999, 0.000001, p, -1, -0.04, 0.5);
-			//file << policyIteration(0.999999, 0.000001, p, -1, -0.04, 0.5);
-		}
-
-		//Try different key loss probabilities
-		for (double k = 0.01; k < 1.01; k += 0.25){
-			std::cout << k << std::endl;
-			file << valueIteration(0.999999, 0.000001, 1, -1, -0.04, k);
-			//file << policyIteration(0.999999, 0.000001, 1, -1, -0.04, k);
-		}
-
+		std::cout << "key loss" << std::endl;
 	}
 
-	file.close();
+	// // Experiment 5 Do Each test 10 times (make sure to print out policies)
+	// for (int i = 0; i < 1; i++) {
+
+	// 	//Try different discount value from 0.16 to 1 (can't go lower than 0.16)
+	// 	for (double j = 0.2; j < 1.; j+= 0.2) {
+	// 		file << valueIteration(j, 0.000001, 1, -1, -0.04, 0.5);
+	// 		//file << policyIteration(j, 0.000001, 1, -1, -0.04, 0.5);
+	// 	}
+
+	// 	//Try different step costs
+	// 	for (double s = -0.001; s > -1.001; s-= 0.25) {
+	// 		std::cout << s << std::endl;
+	// 		file << valueIteration(0.999999, 0.000001, 1, -1, s, 0.5);
+	// 		//file << policyIteration(0.999999, 0.000001, 1, -1, s, 0.5);
+	// 	}
+
+	// 	//Try different negative rewards
+	// 	for (double n = -0.01; n > -10; n-= 2.5){
+	// 		std::cout << n << std::endl;
+	// 		file << valueIteration(0.999999, 0.000001, 1, n, -0.04, 0.5);
+	// 		//file << policyIteration(0.999999, 0.000001, 1, n, -0.04, 0.5);
+	// 	}
+
+	// 	//Try different positive rewards
+	// 	for (double p = 0.01; p < 10; p+= 2.5){
+	// 		std::cout << p << std::endl;
+	// 		file << valueIteration(0.999999, 0.000001, p, -1, -0.04, 0.5);
+	// 		//file << policyIteration(0.999999, 0.000001, p, -1, -0.04, 0.5);
+	// 	}
+
+	// 	//Try different key loss probabilities
+	// 	for (double k = 0.01; k < 1.01; k += 0.25){
+	// 		std::cout << k << std::endl;
+	// 		file << valueIteration(0.999999, 0.000001, 1, -1, -0.04, k);
+	// 		//file << policyIteration(0.999999, 0.000001, 1, -1, -0.04, k);
+	// 	}
+
+	//  }
+
+	disc.close();
+	step.close();
+	neg.close();
+	pos.close();
+	key.close();
 
 	return 0;
 }
@@ -238,9 +266,9 @@ std::string valueIteration(double discount, double epsilon, double posTerminal,
 	double solTime = (double)(end - start) / CLOCKS_PER_SEC;
 
 	//Print results
-	printResults(solTime, numIter, Iter::Value, stepCost,
-				 discount, epsilon, posTerminal, negTerminal,
-				 utility, policy);
+	// printResults(solTime, numIter, Iter::Value, stepCost,
+	// 			 discount, epsilon, posTerminal, negTerminal,
+	// 			 utility, policy);
 
 	stringstream retSS;
 	retSS <<  "value," << numIter << "," << solTime << "," << lastChangeIter << ","
@@ -331,9 +359,9 @@ std::string policyIteration(double discount, double epsilon, double posTerminal,
 	double solTime = (double)(end - start)/ CLOCKS_PER_SEC;
 
 	//Print results
-	printResults(solTime, numIter,  Iter::Policy, stepCost,
-			 	 discount, epsilon, posTerminal, negTerminal,
-				 utility, policy);
+	// printResults(solTime, numIter,  Iter::Policy, stepCost,
+	// 		 	 discount, epsilon, posTerminal, negTerminal,
+	// 			 utility, policy);
 
 	stringstream retSS;
 	retSS <<  "policy," << numIter << "," << solTime << "," << numIter << ","
